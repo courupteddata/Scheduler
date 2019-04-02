@@ -76,18 +76,18 @@ class TimeFrameRequirement(EntityRequirement):
 
     def __init__(self, label: str, cost: float):
         super().__init__(label, cost, False)
-        self.time_frame_type = TimeFrameRequirement.Types.UNDEFINED
+        self._time_frame_type = TimeFrameRequirement.Types.UNDEFINED
 
         # DayOfWeek Typed
-        self.day_of_week: int = -1
+        self._day_of_week: int = -1
 
         # DateRange Typed
-        self.datetime_start: datetime = datetime.today()
-        self.datetime_end: datetime = self.datetime_start
+        self._datetime_start: datetime = datetime.today()
+        self._datetime_end: datetime = self._datetime_start
 
         # TimeRange Typed
-        self.time_start: time = self.datetime_start.time()
-        self.time_end: time = self.datetime_start.time()
+        self._time_start: time = self._datetime_start.time()
+        self._time_end: time = self._datetime_start.time()
 
     @classmethod
     def create_day_week_requirement(cls, label: str, day_of_week: datetime, cost: float):
@@ -99,8 +99,8 @@ class TimeFrameRequirement(EntityRequirement):
         :return:
         """
         created = cls(label, cost)
-        created.day_of_week = day_of_week.weekday()
-        created.time_frame_type = TimeFrameRequirement.Types.DAY_OF_WEEK
+        created._day_of_week = day_of_week.weekday()
+        created._time_frame_type = TimeFrameRequirement.Types.DAY_OF_WEEK
 
         return created
 
@@ -111,9 +111,9 @@ class TimeFrameRequirement(EntityRequirement):
             raise ValueError("start must be before end in the range")
 
         created = cls(label, cost)
-        created.time_frame_type = TimeFrameRequirement.Types.DATE_RANGE
-        created.datetime_start = start
-        created.datetime_end = end
+        created._time_frame_type = TimeFrameRequirement.Types.DATE_RANGE
+        created._datetime_start = start
+        created._datetime_end = end
 
         return created
 
@@ -125,9 +125,9 @@ class TimeFrameRequirement(EntityRequirement):
             raise ValueError("start and end cannot be the same, use date range instead if needed.")
 
         created = cls(label, cost)
-        created.time_frame_type = TimeFrameRequirement.Types.TIME_RANGE
-        created.time_start = start
-        created.time_end = end
+        created._time_frame_type = TimeFrameRequirement.Types.TIME_RANGE
+        created._time_start = start
+        created._time_end = end
 
         return created
 
@@ -136,14 +136,14 @@ class TimeFrameRequirement(EntityRequirement):
         if shift_start > shift_end:
             raise ValueError("shift_start must be before shift_end")
 
-        if self.time_frame_type is TimeFrameRequirement.Types.UNDEFINED:
+        if self._time_frame_type is TimeFrameRequirement.Types.UNDEFINED:
             return False
-        elif self.time_frame_type is TimeFrameRequirement.Types.DAY_OF_WEEK:
-            return shift_start.weekday() <= self.day_of_week <= shift_end.weekday()
-        elif self.time_frame_type is TimeFrameRequirement.Types.DATE_RANGE:
+        elif self._time_frame_type is TimeFrameRequirement.Types.DAY_OF_WEEK:
+            return shift_start.weekday() <= self._day_of_week <= shift_end.weekday()
+        elif self._time_frame_type is TimeFrameRequirement.Types.DATE_RANGE:
             # (StartA <= EndB)  and  (EndA >= StartB)
-            return self.datetime_start <= shift_end and self.datetime_end >= shift_start
-        elif self.time_frame_type is TimeFrameRequirement.Types.TIME_RANGE:
+            return self._datetime_start <= shift_end and self._datetime_end >= shift_start
+        elif self._time_frame_type is TimeFrameRequirement.Types.TIME_RANGE:
             # 11pm to 11pm is invalid
             """
             start  end
@@ -154,15 +154,16 @@ class TimeFrameRequirement(EntityRequirement):
             if (shift_end - shift_start).total_seconds() >= 86400.0:
                 return True
             else:
-                return self.time_start <= shift_end.time() and self.time_end >= shift_start.time()
+                return self._time_start <= shift_end.time() and self._time_end >= shift_start.time()
 
 
 class RelativeRequirement(EntityRequirement):
 
     def __init__(self, label: str, cost: float):
         super().__init__(label, cost, True)
-        self.distance: timedelta = timedelta(days=1)
-        self.during: bool = False
+        self._distance: timedelta = timedelta(days=1)
+        self._during: bool = False
+        self._after: bool = False
 
     @classmethod
     def create_relative_during_requirement(cls, label: str, distance: timedelta, cost: float):
@@ -174,8 +175,8 @@ class RelativeRequirement(EntityRequirement):
         :return:
         """
         created = cls(label, cost)
-        created.distance = distance
-        created.during = True
+        created._distance = distance
+        created._during = True
 
         return created
 
@@ -189,16 +190,18 @@ class RelativeRequirement(EntityRequirement):
         :return:
         """
         created = cls(label, cost)
-        created.distance = distance
-        created.during = False
+        created._distance = distance
+        created._after = True
 
         return created
 
     def applies(self, entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool:
-        if self.during:
-            return (entity_state.last_schedule - shift_start) <= self.distance
+        if self._during:
+            return (entity_state.last_schedule - shift_start) <= self._distance
+        elif self._after:
+            return (entity_state.last_schedule - shift_start) > self._distance
         else:
-            return (entity_state.last_schedule - shift_start) >= self.distance
+            return False
 
 
 class TotalsRequirement(EntityRequirement):
@@ -206,28 +209,28 @@ class TotalsRequirement(EntityRequirement):
     def __init__(self, label: str, cost: float):
         super().__init__(label, cost, True)
 
-        self.scale: bool = False
         self.total_requirement: float = 0
         self.is_rolling: bool = False
-        self.hours_worked: float = 0
+        self._hours_worked: float = 0
+        self._scale: bool = False
 
         # rolling requirement
-        self.start: datetime = datetime.now()
-        self.length: timedelta = timedelta(days=1)
+        self._start: datetime = datetime.now()
+        self._length: timedelta = timedelta(days=1)
 
         # fixed window requirement, uses same start
-        self.end: datetime = self.start
+        self._end: datetime = self._start
 
     @classmethod
     def create_rolling_totals_requirement(cls, label: str, start: datetime, length: timedelta, total_requirement: float,
                                           cost: float, scale: bool = False):
         created = cls(label, cost)
-        created.scale = scale
+        created._scale = scale
         created.total_requirement = total_requirement
         created.is_rolling = True
 
-        created.start = start
-        created.length = length
+        created._start = start
+        created._length = length
 
         return created
 
@@ -235,35 +238,35 @@ class TotalsRequirement(EntityRequirement):
     def create_fixed_totals_requirement(cls, label: str, start: datetime, end: datetime, total_requirement: float,
                                         cost: float, scale: bool = False):
         created = cls(label, cost)
-        created.scale = scale
+        created._scale = scale
         created.total_requirement = total_requirement
         created.is_rolling = False
 
-        created.start = start
-        created.end = end
+        created._start = start
+        created._end = end
 
         return created
 
     def applies(self, entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool:
-        if shift_start < self.start:  # Make sure that the shift start is after requirement start
+        if shift_start < self._start:  # Make sure that the shift start is after requirement start
             return False
 
         if self.is_rolling:
-            window_start: datetime = self.start
-            while (window_start <= shift_start <= window_start + self.length) is not True:
-                window_start += self.length
-            self.hours_worked = entity_state.hours_worked_in(window_start, window_start + self.length)
+            window_start: datetime = self._start
+            while (window_start <= shift_start <= window_start + self._length) is not True:
+                window_start += self._length
+            self._hours_worked = entity_state.hours_worked_in(window_start, window_start + self._length)
             return True
         else:
-            if self.start <= shift_start <= self.end:
-                self.hours_worked = entity_state.hours_worked_in(self.start, self.end)
+            if self._start <= shift_start <= self._end:
+                self._hours_worked = entity_state.hours_worked_in(self._start, self._end)
                 return True
             else:
                 return False
 
     @property
     def cost(self) -> float:
-        if self.scale:
-            return (self.hours_worked / self.total_requirement) * self._cost
+        if self._scale:
+            return (self._hours_worked / self.total_requirement) * self._cost
 
         return self._cost

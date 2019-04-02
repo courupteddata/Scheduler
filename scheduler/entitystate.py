@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 
@@ -20,10 +20,14 @@ class EntityState:
 
     def __init__(self):
         self.hours_worked: List[EntityState.WorkedEntry] = []
-        self.last_schedule: datetime = None
+        self.last_schedule: datetime = datetime(year=1, month=1, day=1)
 
-    def scheduled(self, shift_start: datetime, hours_worked: float) -> None:
-        self.hours_worked.append(EntityState.WorkedEntry(shift_start, hours_worked))
+    def scheduled(self, shift_start: datetime, hours_worked: [float, timedelta]) -> None:
+        if isinstance(hours_worked, timedelta):
+            self.hours_worked.append(EntityState.WorkedEntry(shift_start, hours_worked.total_seconds() / 3600.0))
+        else:
+            self.hours_worked.append(EntityState.WorkedEntry(shift_start, hours_worked))
+
         self.last_schedule = shift_start
 
     def hours_worked_in(self, start: datetime, end: datetime) -> float:

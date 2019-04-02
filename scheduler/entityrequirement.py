@@ -52,7 +52,7 @@ TotalsRequirement:
 class EntityRequirement:
     def __init__(self, label: str, cost: float, is_relative: bool = False):
         self.label = label
-        self.cost = cost
+        self._cost = cost
         self.is_relative = is_relative
 
     def applies(self, entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool:
@@ -60,11 +60,11 @@ class EntityRequirement:
 
     @property
     def cost(self) -> float:
-        return self.cost
+        return self._cost
 
     @cost.setter
     def cost(self, cost: float) -> None:
-        self.cost = cost
+        self._cost = cost
 
 
 class TimeFrameRequirement(EntityRequirement):
@@ -210,7 +210,6 @@ class TotalsRequirement(EntityRequirement):
         self.total_requirement: float = 0
         self.is_rolling: bool = False
         self.hours_worked: float = 0
-        self.saved_cost: float = cost
 
         # rolling requirement
         self.start: datetime = datetime.now()
@@ -265,6 +264,6 @@ class TotalsRequirement(EntityRequirement):
     @property
     def cost(self) -> float:
         if self.scale:
-            return (self.hours_worked / self.total_requirement) * self.saved_cost
+            return (self.hours_worked / self.total_requirement) * self._cost
 
-        return self.saved_cost
+        return self._cost

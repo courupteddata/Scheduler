@@ -1,6 +1,7 @@
 from .entitystate import EntityState
 from .entityrequirement import EntityRequirement
-from typing import List
+from .locationmanager import Location
+from typing import List, Set
 from datetime import datetime
 
 
@@ -10,6 +11,7 @@ class Entity:
         self.name = name
         self.state: EntityState = EntityState()
         self.requirements: List[EntityRequirement] = []
+        self.locations: Set[Location] = set()
 
     def clear_state(self) -> None:
         """

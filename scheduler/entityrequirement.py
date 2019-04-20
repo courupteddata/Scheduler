@@ -17,9 +17,13 @@
     entityrequirement.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
 """
 
-from .entitystate import EntityState
 from datetime import datetime, time, timedelta
 from enum import Enum, auto
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    # Needed only for typing
+    from . import entitystate
 
 """
 Contains the base requirement for units to compute cost
@@ -55,7 +59,7 @@ class EntityRequirement:
         self._cost = cost
         self.is_relative = is_relative
 
-    def applies(self, entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool:
+    def applies(self, entity_state: 'entitystate.EntityState', shift_start: datetime, shift_end: datetime) -> bool:
         return True
 
     @property
@@ -131,7 +135,7 @@ class TimeFrameRequirement(EntityRequirement):
 
         return created
 
-    def applies(self, entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool:
+    def applies(self, entity_state: 'entitystate.EntityState', shift_start: datetime, shift_end: datetime) -> bool:
 
         if shift_start > shift_end:
             raise ValueError("shift_start must be before shift_end")
@@ -195,7 +199,7 @@ class RelativeRequirement(EntityRequirement):
 
         return created
 
-    def applies(self, entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool:
+    def applies(self, entity_state: 'entitystate.EntityState', shift_start: datetime, shift_end: datetime) -> bool:
         if self._during:
             return (entity_state.last_schedule - shift_start) <= self._distance
         elif self._after:
@@ -247,7 +251,7 @@ class TotalsRequirement(EntityRequirement):
 
         return created
 
-    def applies(self, entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool:
+    def applies(self, entity_state: 'entitystate.EntityState', shift_start: datetime, shift_end: datetime) -> bool:
         if shift_start < self._start:  # Make sure that the shift start is after requirement start
             return False
 

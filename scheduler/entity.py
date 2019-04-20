@@ -1,23 +1,26 @@
-from .entitystate import EntityState
-from .entityrequirement import EntityRequirement
-from .locationmanager import Location
-from typing import List, Set
+from typing import List, Set, TYPE_CHECKING
 from datetime import datetime
+
+from . import entitystate
+
+if TYPE_CHECKING:
+    # Needed only for typing
+    from . import locationmanager, entityrequirement
 
 
 class Entity:
 
     def __init__(self, name: str):
         self.name = name
-        self.state: EntityState = EntityState()
-        self.requirements: List[EntityRequirement] = []
-        self.locations: Set[Location] = set()
+        self.state: entitystate.EntityState = entitystate.EntityState()
+        self.requirements: List['entityrequirement.EntityRequirement'] = []
+        self.locations: Set['locationmanager.Location'] = set()
 
     def clear_state(self) -> None:
         """
         Resets the entity state so that it looks like they were never scheduled
         """
-        self.state: EntityState = EntityState()
+        self.state: entitystate.EntityState = entitystate.EntityState()
 
     def cost_to_schedule(self, shift_start: datetime, shift_end: datetime) -> float:
         """
@@ -48,8 +51,8 @@ class Entity:
         """
         self.state.scheduled(shift_start, (shift_end - shift_start))
 
-    def add_requirement(self, new_requirement: EntityRequirement):
+    def add_requirement(self, new_requirement: 'entityrequirement.EntityRequirement'):
         self.requirements.append(new_requirement)
 
-    def remove_requirement(self, old_requirement: EntityRequirement):
+    def remove_requirement(self, old_requirement: 'entityrequirement.EntityRequirement'):
         self.requirements.remove(old_requirement)

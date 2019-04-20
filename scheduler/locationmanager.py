@@ -1,5 +1,8 @@
-from typing import Set, List
-from .entity import Entity
+from typing import Set, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    # Needed only for typing
+    from . import entity
 
 
 class Location:
@@ -48,8 +51,8 @@ class LocationManager:
     def get_locations(self) -> List[Location]:
         return list(self.locations)
 
-    def set_entity_locations(self, locations : Set[Location], entity: Entity) -> bool:
+    def set_entity_locations(self, locations: Set[Location], entity_to_set: 'entity.Entity') -> bool:
         if locations.issubset(self.locations):
-            entity.locations = locations
+            entity_to_set.locations = locations
             return True
         return False

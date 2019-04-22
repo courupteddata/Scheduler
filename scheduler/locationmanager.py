@@ -34,8 +34,15 @@ class LocationManager:
         was_in = loc in self.locations
         if not was_in:  # Not needed, but no need to run add if it was already in set
             self.locations.add(loc)
+            return True
+        return False
 
-        return was_in
+    def set_entity_locations(self, locations: Set[Location], entity_to_set: 'entity.Entity') -> bool:
+        if locations.issubset(self.locations):
+            entity_to_set.locations = locations
+            return True
+
+        return False
 
     def remove_location(self, loc: Location) -> bool:
         """
@@ -50,9 +57,3 @@ class LocationManager:
 
     def get_locations(self) -> List[Location]:
         return list(self.locations)
-
-    def set_entity_locations(self, locations: Set[Location], entity_to_set: 'entity.Entity') -> bool:
-        if locations.issubset(self.locations):
-            entity_to_set.locations = locations
-            return True
-        return False

@@ -1,19 +1,24 @@
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, TYPE_CHECKING
 import math
+
+if TYPE_CHECKING:
+    from . import entity
 
 #  Model everything as a list of shifts that can be on or off.
 
 
 class Shift:
 
-    def __init__(self, start: datetime = None, end: datetime = None, label: str = None):
+    def __init__(self, start: datetime = None, end: datetime = None, label: str = None,
+                 filled: 'entity.Entity' = None):
         self.start = start
         self.end = end
         self.label = label
+        self.filled = filled
 
     def __repr__(self):
-        return f"Start: {self.start}, End: {self.end}, Label: {self.label}"
+        return f"Start: {self.start}, End: {self.end}, Label: {self.label}, Filled: {self.filled}"
 
 
 class Schedule:

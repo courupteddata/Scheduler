@@ -24,6 +24,13 @@ class TestEntityState(TestCase):
         self.assertEqual(entity_state.hours_worked_in(start - timedelta(days=1), start + timedelta(days=11)),
                          15, "The time should be from both entries")
 
+        self.assertEqual(entity_state.last_schedule_distance_hours(start, start + timedelta(hours=10)),
+                         0, "Should be zero because that matches up with an exact shift")
+
+        self.assertEqual(entity_state.last_schedule_distance_hours(start + timedelta(hours=1),
+                                                                   start + timedelta(hours=11)),
+                         1, "Should be one because it's another shift that is shifted by one hour")
+
 
 class TestEntityStateWorkedEntry(TestCase):
 

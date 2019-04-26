@@ -1,7 +1,7 @@
 from unittest import TestCase
 from scheduler.entityrequirement import TimeFrameRequirement
 from scheduler.entitystate import EntityState
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 
 
 class TestTimeFrameRequirement(TestCase):

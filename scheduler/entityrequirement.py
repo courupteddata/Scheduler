@@ -165,7 +165,7 @@ class RelativeRequirement(EntityRequirement):
 
     def __init__(self, label: str, cost: float):
         super().__init__(label, cost, True)
-        self._distance: timedelta = timedelta(days=1)
+        self._distance: float = 0
         self._during: bool = False
         self._after: bool = False
 
@@ -179,7 +179,7 @@ class RelativeRequirement(EntityRequirement):
         :return:
         """
         created = cls(label, cost)
-        created._distance = distance
+        created._distance = (distance.total_seconds() / 3600.0)
         created._during = True
 
         return created
@@ -194,16 +194,16 @@ class RelativeRequirement(EntityRequirement):
         :return:
         """
         created = cls(label, cost)
-        created._distance = distance
+        created._distance = (distance.total_seconds() / 3600.0)
         created._after = True
 
         return created
 
     def applies(self, entity_state: 'entitystate.EntityState', shift_start: datetime, shift_end: datetime) -> bool:
         if self._during:
-            return (entity_state.last_schedule - shift_start) <= self._distance
+            return (entity_state.last_schedule_distance_hours(shift_start, shift_end)) <= self._distance
         elif self._after:
-            return (entity_state.last_schedule - shift_start) > self._distance
+            return (entity_state.last_schedule_distance_hours(shift_start, shift_end)) > self._distance
         else:
             return False
 

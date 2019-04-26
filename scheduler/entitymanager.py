@@ -37,6 +37,14 @@ class EntityManager:
             return True
         return False
 
+    def update_name(self, old_name: str, new_name: str) -> bool:
+        if old_name in self.entities and new_name not in self.entities:
+            self.entities[new_name] = self.entities[old_name]
+            del self.entities[old_name]
+
+            return True
+        return False
+
     def get_entities(self) -> List[entity.Entity]:
         return list(self.entities.values())
 

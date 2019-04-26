@@ -48,16 +48,16 @@ class EntityManager:
     def get_entities(self) -> List[entity.Entity]:
         return list(self.entities.values())
 
-    def get_entities_by_location(self) -> Dict[str, List[entity.Entity]]:
-        temp = {"None": []}
+    def get_entities_by_location(self) -> Dict[locationmanager.Location, List[entity.Entity]]:
+        temp = {None: []}
         for loc in self.location_manager.locations:
-            temp[loc.label] = []
+            temp[loc] = []
         for entity_value in self.entities.values():
             if len(entity_value.locations) == 0:
-                temp["None"].append(entity_value)
+                temp[None].append(entity_value)
 
             for entity_loc in entity_value.locations:
-                temp[entity_loc.label].append(entity_value)
+                temp[entity_loc].append(entity_value)
 
         return temp
 

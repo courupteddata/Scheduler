@@ -1,4 +1,4 @@
-from typing import Dict, TYPE_CHECKING, List
+from typing import Dict, TYPE_CHECKING, List, Tuple
 import heapq
 from . import entitymanager, schedule
 
@@ -51,7 +51,7 @@ class Scheduler:
 
         return True, f"Schedule for location {loc.label} done, with {num_empty_shifts} empty shifts"
 
-    def fill_schedules(self) -> List[(bool, str)]:
+    def fill_schedules(self) -> List[Tuple[bool, str]]:
         entities_by_location = self.entity_manager.get_entities_by_location()
         to_return = []
 

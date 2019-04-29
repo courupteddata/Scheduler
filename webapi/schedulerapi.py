@@ -1,23 +1,31 @@
-import flask
-from flask import request, jsonify
+from flask import request, jsonify, Flask, Blueprint
+from typing import TYPE_CHECKING
+from os import path
+import os
+import pickle
 
 from scheduler import scheduler
 
-app = flask.Flask(__name__)
+if TYPE_CHECKING:
+    from scheduler import entitymanager
 
-"""
-Example for something to run before 
-@app.before_first_request
-def activate_job():
-    def run_job():
-        while True:
-            print("Run recurring task")
-            time.sleep(3)
+FLAT_FILE_NAME = "storage.pickle"
 
-    thread = threading.Thread(target=run_job)
-    thread.start()
-"""
+scheduler_api = Blueprint('scheduler_api', __name__)
+shared_scheduler = scheduler.Scheduler()
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+def prepare():
+    global shared_entity_manager
+    if path.exists(FLAT_FILE_NAME):
+        os.remove(FLAT_FILE_NAME)
+        with open(FLAT_FILE_NAME, "rb") as f:
+            shared_entity_manager: scheduler.Scheduler = pickle.load(f)
+
+        try:
+            os.remove(FLAT_FILE_NAME + ".backup")
+        except OSError:
+            pass
+
+        with open(FLAT_FILE_NAME + ".backup", "wb") as f:
+            pickle.dump(f)

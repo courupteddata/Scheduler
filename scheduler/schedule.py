@@ -11,11 +11,14 @@ if TYPE_CHECKING:
 class Shift:
 
     def __init__(self, start: datetime = None, end: datetime = None, label: str = None,
-                 filled: 'entity.Entity' = None):
+                 filled: str = None):
         self.start = start
         self.end = end
         self.label = label
         self.filled = filled
+
+    def __lt__(self, other) -> bool:
+        return self.start < other.start
 
     def __repr__(self):
         return f"Start: {self.start}, End: {self.end}, Label: {self.label}, Filled: {self.filled}"
@@ -32,6 +35,13 @@ class Schedule:
             representation += str(shift) + "\n"
         return representation
 
+    def to_json(self):
+        pass
+
+    @classmethod
+    def from_json(cls, data: str):
+        pass
+
     @classmethod
     def create_template_from_sample(cls, week: List[List[Shift]], end: datetime):
         """
@@ -42,6 +52,9 @@ class Schedule:
         :param end: A datetime to end the scheduling
         :return: an empty schedule to be filled with shifts to be scheduled
         """
+
+        for day in week:
+            day.sort()
 
         template = cls()
         template.shifts = []
@@ -121,9 +134,11 @@ if __name__ == '__main__':
     print("-"*20)
     print(test2)
 
-    two_tuesday = [[Shift(start=datetime(year=2019, month=1, day=1),
+    two_tuesday = [[Shift(start=datetime(year=2019, month=1, day=1) + timedelta(hours=8),
+                    end=datetime(year=2019, month=1, day=1)+timedelta(hours=16),
+                    label="TuesdayFirst-Later in day"), Shift(start=datetime(year=2019, month=1, day=1),
                     end=datetime(year=2019, month=1, day=1)+timedelta(hours=8),
-                    label="TuesdayFirst")],
+                    label="TuesdayFirst"), ],
                    [Shift(start=datetime(year=2019, month=1, day=8),
                     end=datetime(year=2019, month=1, day=8)+timedelta(hours=9),
                     label="TuesdaySecond-9Hours")]]

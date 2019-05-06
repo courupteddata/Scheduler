@@ -26,22 +26,13 @@ class EntityManager:
         self.location_manager: locationmanager.LocationManager = locationmanager.LocationManager()
 
     def add_entity(self, name: str) -> bool:
-        if name in self.entities:
-            return False
-        self.entities[name] = entity.Entity(name)
+        temp = entity.Entity(name)
+        self.entities[temp.entity_id] = temp
         return True
 
-    def remove_entity(self, name: str) -> bool:
-        if name in self.entities:
-            del self.entities[name]
-            return True
-        return False
-
-    def update_name(self, old_name: str, new_name: str) -> bool:
-        if old_name in self.entities and new_name not in self.entities:
-            self.entities[new_name] = self.entities[old_name]
-            del self.entities[old_name]
-
+    def remove_entity(self, entity_id: str) -> bool:
+        if entity_id in self.entities:
+            del self.entities[entity_id]
             return True
         return False
 
@@ -64,32 +55,32 @@ class EntityManager:
     """
     Requirement management of an entity
     """
-    def add_requirement_to_entity(self, name: str,
+    def add_requirement_to_entity(self, entity_id: str,
                                   requirement: Union['entityrequirement.EntityRequirement',
                                                      List['entityrequirement.EntityRequirement']]) -> bool:
-        if name not in self.entities:
+        if entity_id not in self.entities:
             return False
         if not isinstance(requirement, list):
-            self.entities[name].add_requirement(requirement)
+            self.entities[entity_id].add_requirement(requirement)
         else:
             for req in requirement:
-                self.entities[name].add_requirement(req)
+                self.entities[entity_id].add_requirement(req)
         return True
 
-    def remove_requirement_from_entity(self, name: str,
+    def remove_requirement_from_entity(self, entity_id: str,
                                        requirement: Union['entityrequirement.EntityRequirement',
                                                           List['entityrequirement.EntityRequirement']]) -> bool:
-        if name not in self.entities:
+        if entity_id not in self.entities:
             return False
         if not isinstance(requirement, list):
-            self.entities[name].remove_requirement(requirement)
+            self.entities[entity_id].remove_requirement(requirement)
         else:
             for req in requirement:
-                self.entities[name].remove_requirement(req)
+                self.entities[entity_id].remove_requirement(req)
         return True
 
-    def get_requirements_for_entity(self, name: str) -> List['entityrequirement.EntityRequirement']:
-        return self.entities[name].requirements
+    def get_requirements_for_entity(self, entity_id: str) -> List['entityrequirement.EntityRequirement']:
+        return self.entities[entity_id].requirements
 
     """
     Location management of an entity
@@ -103,8 +94,10 @@ class EntityManager:
     def get_locations(self) -> List[locationmanager.Location]:
         return self.location_manager.get_locations()
 
-    def add_locations_to_entity(self, name: str, loc_set: Set[locationmanager.Location]) -> bool:
-        return self.location_manager.set_entity_locations(self.entities[name].locations | loc_set, self.entities[name])
+    def add_locations_to_entity(self, entity_id: str, loc_set: Set[locationmanager.Location]) -> bool:
+        return self.location_manager.set_entity_locations(self.entities[entity_id].locations | loc_set,
+                                                          self.entities[entity_id])
 
-    def remove_locations_from_entity(self, name: str, loc_set: Set[locationmanager.Location]) -> bool:
-        return self.location_manager.set_entity_locations(self.entities[name].locations - loc_set, self.entities[name])
+    def remove_locations_from_entity(self, entity_id: str, loc_set: Set[locationmanager.Location]) -> bool:
+        return self.location_manager.set_entity_locations(self.entities[entity_id].locations - loc_set,
+                                                          self.entities[entity_id])

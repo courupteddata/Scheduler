@@ -44,7 +44,7 @@ class Scheduler:
 
                 if cost <= current_cost_limit:
                     best_person.schedule(shift.start, shift.end)
-                    shift.filled = best_person
+                    shift.filled = best_person.entity_id
                 else:
                     num_empty_shifts += 1
             current_cost_limit += self.step_size

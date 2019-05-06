@@ -17,7 +17,7 @@ class Entity:
         self.state: entitystate.EntityState = entitystate.EntityState()
         self.requirements: List['entityrequirement.EntityRequirement'] = []
         self.locations: Set['locationmanager.Location'] = set()
-        self.id = str(uuid.uuid1(random.getrandbits(48) | 0x010000000000))
+        self.entity_id = str(uuid.uuid1(random.getrandbits(48) | 0x010000000000))
 
     def clear_state(self) -> None:
         """

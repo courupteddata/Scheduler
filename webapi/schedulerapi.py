@@ -28,4 +28,4 @@ def prepare():
             pass
 
         with open(FLAT_FILE_NAME + ".backup", "wb") as f:
-            pickle.dump(f)
+            pickle.dump(shared_entity_manager, f)

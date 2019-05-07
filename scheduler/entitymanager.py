@@ -1,4 +1,6 @@
 from typing import Dict, Union, List, Set, TYPE_CHECKING
+from scheduler import shared
+import sqlite3
 
 from . import locationmanager, entity
 
@@ -8,22 +10,13 @@ if TYPE_CHECKING:
 
 
 class EntityManager:
-    """
-    TODO: Maybe change from name being the key in the dictionary and instead create an ID for each entity
-
-    add_entity
-    remove_entity
-    get_entities
-    get_entities_by_location
-
-    add_requirement_to_entity
-    remove_requirement_from_entity
-    ...
-    """
 
     def __init__(self):
-        self.entities: Dict[str, entity.Entity] = {}
-        self.location_manager: locationmanager.LocationManager = locationmanager.LocationManager()
+        self.connection = shared.connect_to_db()
+
+        self.connection.execute(shared.ENTITY_TABLE_CREATE)
+        self.connection.execute(shared.REQUIREMENTS_TABLE_CREATE)
+        self.connection.commit()
 
     def add_entity(self, name: str) -> bool:
         temp = entity.Entity(name)

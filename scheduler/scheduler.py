@@ -29,7 +29,7 @@ class Scheduler:
         while current_cost_limit <= self.max_cost and num_empty_shifts > 0:
             num_empty_shifts = 0
             for shift in self.schedule[loc].shifts:
-                if shift.filled is not None:
+                if shift.filled:
                     continue
 
                 count = 0

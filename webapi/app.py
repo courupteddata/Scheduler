@@ -1,5 +1,5 @@
 from flask import Flask
-from . import schedulerapi, scheduleapi
+from webapi import scheduleapi, schedulerapi
 
 app = Flask(__name__)
 API_PREFIX = "/api/v1"

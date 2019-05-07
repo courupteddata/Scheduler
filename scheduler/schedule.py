@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
-from typing import List, TYPE_CHECKING
+from typing import List
 import math
-
-if TYPE_CHECKING:
-    from . import entity
+import json
+from dateutil import parser
+import uuid
+import random
 
 #  Model everything as a list of shifts that can be on or off.
 
@@ -11,7 +12,7 @@ if TYPE_CHECKING:
 class Shift:
 
     def __init__(self, start: datetime = None, end: datetime = None, label: str = None,
-                 filled: str = None):
+                 filled: str = ""):
         self.start = start
         self.end = end
         self.label = label
@@ -23,11 +24,18 @@ class Shift:
     def __repr__(self):
         return f"Start: {self.start}, End: {self.end}, Label: {self.label}, Filled: {self.filled}"
 
+    def to_json(self) -> str:
+        return json.dumps({"start": self.start.isoformat(),
+                           "end": self.end.isoformat(),
+                           "label": self.label,
+                           "filled": self.filled})
+
 
 class Schedule:
 
     def __init__(self):
         self.shifts: List[Shift] = []
+        self.schedule_id = str(uuid.uuid1(random.getrandbits(48) | 0x010000000000))
 
     def __repr__(self):
         representation = ""
@@ -35,12 +43,23 @@ class Schedule:
             representation += str(shift) + "\n"
         return representation
 
-    def to_json(self):
-        pass
+    def to_json(self) -> str:
+        to_return = "["
+        for shift in self.shifts:
+            to_return += shift.to_json() + ","
+        return to_return[:-1] + "]"
 
     @classmethod
     def from_json(cls, data: str):
-        pass
+        loaded = json.loads(data)
+
+        created = cls()
+        for shift in loaded:
+            created.shifts.append(Shift(start=parser.parse(shift["start"]),
+                                        end=parser.parse(shift["end"]),
+                                        label=shift["label"],
+                                        filled=shift["filled"]))
+        return created
 
     @classmethod
     def create_template_from_sample(cls, week: List[List[Shift]], end: datetime):
@@ -125,9 +144,13 @@ if __name__ == '__main__':
                                                       end=datetime(year=2019, month=2, day=1))
     print(test)
 
-    just_tuesday = [[Shift(start=datetime(year=2019, month=1, day=1),
-                    end=datetime(year=2019, month=1, day=1)+timedelta(hours=8),
-                    label="Tuesday")]]
+    just_tuesday = [
+        [
+            Shift(start=datetime(year=2019, month=1, day=1),
+                  end=datetime(year=2019, month=1, day=1)+timedelta(hours=8),
+                  label="Tuesday")
+        ]
+    ]
 
     test2 = Schedule.create_template_from_sample(just_tuesday, datetime(year=2019, month=2, day=1))
 
@@ -147,3 +170,9 @@ if __name__ == '__main__':
 
     print("-"*20)
     print(test3)
+
+    temp = test3.to_json()
+
+    print(temp)
+
+    print(Schedule.from_json(temp))

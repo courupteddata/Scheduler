@@ -12,13 +12,12 @@ if TYPE_CHECKING:
 FLAT_FILE_NAME = "storage.pickle"
 
 scheduler_api = Blueprint('scheduler_api', __name__)
-shared_scheduler = scheduler.Scheduler()
+shared_scheduler: scheduler.Scheduler = scheduler.Scheduler()
 
 
 def prepare():
-    global shared_entity_manager
     if path.exists(FLAT_FILE_NAME):
-        os.remove(FLAT_FILE_NAME)
+
         with open(FLAT_FILE_NAME, "rb") as f:
             shared_entity_manager: scheduler.Scheduler = pickle.load(f)
 

@@ -23,7 +23,7 @@ def create_schedule_from_template():
     """
     data = request.get_json()
 
-    if data is None:
+    if data is None or data["end"] is None or data["week"] is None:
         abort(400)  # Need data with the post, otherwise error out
 
     template = []
@@ -36,6 +36,11 @@ def create_schedule_from_template():
                                                   entry.get("label", "")))
         index += 1
 
-    created_schedule = schedule.Schedule.create_template_from_sample(end=parser.parse(data["end"]), week=template)
+    return {
+        "response": schedule.Schedule.create_template_from_sample(end=parser.parse(data["end"]), week=template).to_json(),
+        "status": 200,
+        "mimetype": "application/json"
+        }
+
 
 

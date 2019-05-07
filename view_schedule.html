@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <link href='fullcalendar/core/main.css' rel='stylesheet' />
+  <link href='fullcalendar/daygrid/main.css' rel='stylesheet' />
+
+  <script src='fullcalendar/core/main.js'></script>
+  <script src='fullcalendar/daygrid/main.js'></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var calendarEl = document.getElementById('calendar');
+      var schedule_id = window.location.search.split("=")[1];
+      var today = new Date();
+
+      var data =
+      {
+        "shifts":[
+          {"id":"0", "start":"2019-05-06T02:26:49.756Z", "end":"2019-05-05T10:26:49.756Z", "label":"Amy"},
+          {"id":"1", "start":"2019-05-07T02:26:49.756Z", "end":"2019-05-06T10:26:49.756Z", "label":"Emily"},
+          {"id":"2", "start":"2019-05-08T02:26:49.756Z", "end":"2019-05-07T10:26:49.756Z", "label":"Frank"},
+          {"id":"3", "start":"2019-05-09T02:26:49.756Z", "end":"2019-05-08T10:26:49.756Z", "label":"Karl"},
+          {"id":"4", "start":"2019-05-10T02:26:49.756Z", "end":"2019-05-09T10:26:49.756Z", "label":"Beyonce"}
+        ]
+      };
+      var events = [];
+      data.shifts.forEach(function(shift) {
+        events.push({
+          title: shift.label,
+          start: shift.start,
+          end: shift.end
+        });
+      });
+      console.log(events);
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        plugins: ['dayGrid'],
+        defaultView: 'dayGridMonth',
+        header: {
+          left: 'prev,next today',
+          center: 'title',
+        },
+        events: events
+      });
+
+      calendar.render();
+    });
+    </script>
+
+  <title>Edit Schedule</title>
+</head>
+<body>
+
+  <div id='calendar' style="max-width: 900px; margin: 40px auto;"></div>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>

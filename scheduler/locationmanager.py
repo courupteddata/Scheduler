@@ -1,20 +1,5 @@
 from typing import List, Union
-import sqlite3
-
-
-ENTITY_TABLE_CREATE = '''CREATE TABLE IF NOT EXISTS entity (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);'''
-LOCATION_TABLE_CREATE = '''CREATE TABLE IF NOT EXISTS location (id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT);'''
-ENTITY_LOCATION_TABLE_CREATE = '''CREATE TABLE IF NOT EXISTS entity_location (entity_id INTEGER, 
-                                                                              location_id INTEGER, UNIQUE(entity_id, 
-                                                                              location_id));'''
-SHIFT_TABLE_CREATE = '''CREATE TABLE IF NOT EXISTS shift (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                                                          start TEXT NOT NULL, 
-                                                          end TEXT NOT NULL,
-                                                          info TEXT,
-                                                          entity_id TEXT);'''
-REQUIREMENTS_TABLE_CREATE = '''CREATE TABLE IF NOT EXISTS entity (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                                 type TEXT NOT NULL, 
-                                                                 json_data BLOB);'''
+from . import shared
 
 
 class Location:
@@ -39,12 +24,10 @@ class Location:
 class LocationManager:
 
     def __init__(self):
-        self.connection = sqlite3.connect("scheduler.db")
-        self.connection.execute(LOCATION_TABLE_CREATE)
-        self.connection.execute(ENTITY_LOCATION_TABLE_CREATE)
-        self.connection.commit()
+        self.connection = shared.DB().get_connection()
+        shared.DB.create_all_tables()
 
-    def add_location(self, label: str) -> int:
+    def create_location(self, label: str) -> int:
         """
         Adds a location, always works if the database is working
         :param label: the location to add
@@ -55,21 +38,27 @@ class LocationManager:
 
         return inserted_id
 
-    def remove_location(self, location_id: int) -> bool:
+    def update_location(self, location_id: int, new_label: str) -> bool:
+        modified_row_count = self.connection.execute('UPDATE location SET label=? WHERE id=?',
+                                                     (new_label, location_id)).rowcount
+        self.connection.commit()
+
+        return modified_row_count > 0
+
+    def delete_location(self, location_id: int) -> bool:
         """
         Removes a location
         :param location_id: location to remove
         :return: True if the location was removed, false otherwise (like if it was never a valid location)
         """
-        return self.connection.execute('DELETE FROM location WHERE id=?;', (location_id,)).rowcount == 1
+        modified_row_count = self.connection.execute('DELETE FROM location WHERE id=?;', (location_id,)).rowcount
+        self.connection.commit()
+        return modified_row_count > 0
 
     def get_locations(self) -> List[Location]:
-        all_locations = []
-        for loc in self.connection.execute('SELECT id,label FROM location;'):
-            all_locations.append(Location(loc[1], loc[0]))
-        return all_locations
+        return [Location(loc[1], loc[0]) for loc in self.connection.execute('SELECT id,label FROM location;')]
 
-    def get_location_by_location_id(self, location_id: int) -> Union[Location, None]:
+    def get_locations_by_location_id(self, location_id: int) -> Union[Location, None]:
         data = self.connection.execute('SELECT id,label FROM location WHERE id=?;',
                                        (location_id,)).fetchone()
         if data is None:
@@ -77,18 +66,13 @@ class LocationManager:
         else:
             return Location(data[1], data[0])
 
-    def get_entity_id_by_location_id(self, location_id: int) -> List[int]:
-        to_return = []
-        for item in self.connection.execute('SELECT entity_id FROM entity_location WHERE location_id=?;',
-                                            (location_id,)):
-            to_return.append(item[0])
-        return to_return
+    def get_entity_ids_by_location_id(self, location_id: int) -> List[int]:
+        return [item[0] for item in
+                self.connection.execute('SELECT entity_id FROM entity_location WHERE location_id=?;', (location_id,))]
 
-    def get_location_id_by_entity_id(self, entity_id: int) -> List[int]:
-        to_return = []
-        for item in self.connection.execute('SELECT location_id from entity_location WHERE entity_id=?;', (entity_id,)):
-            to_return.append(item[0])
-        return to_return
+    def get_location_ids_by_entity_id(self, entity_id: int) -> List[int]:
+        return [item[0] for item in
+                self.connection.execute('SELECT location_id from entity_location WHERE entity_id=?;', (entity_id,))]
 
     def add_location_to_entity(self, location_id: Union[int, List[int]], entity_id: Union[int, List[int]]) -> int:
         """
@@ -114,11 +98,11 @@ class LocationManager:
             else:
                 modified_list.append((entity_id, location_id))
 
-        to_return = self.connection.executemany("INSERT OR IGNORE INTO "
-                                                "entity_location(entity_id, location_id) VALUES (?, ?);",
+        row_count = self.connection.executemany('INSERT OR IGNORE INTO entity_location'
+                                                '(entity_id, location_id) VALUES (?, ?);',
                                                 modified_list).rowcount
         self.connection.commit()
-        return to_return
+        return row_count
 
     def remove_location_from_entity(self, location_id: Union[int, List[int]], entity_id: Union[int, List[int]]) -> int:
         """
@@ -144,18 +128,7 @@ class LocationManager:
             else:
                 modified_list.append((entity_id, location_id))
 
-        to_return = self.connection.executemany("DELETE from entity_location WHERE entity_id=? AND location_id=?;",
+        row_count = self.connection.executemany('DELETE from entity_location WHERE entity_id=? AND location_id=?;',
                                                 modified_list).rowcount
         self.connection.commit()
-        return to_return
-
-
-if __name__ == '__main__':
-    test = LocationManager()
-    #print(test.add_location("testing"))
-
-    print(test.get_locations())
-    print(test.remove_location(10))
-    print(test.get_locations())
-
-    print(test.get_location_by_location_id(1))
+        return row_count

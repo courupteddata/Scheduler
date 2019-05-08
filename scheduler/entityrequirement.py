@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 Contains the base requirement for units to compute cost
 
 Flow should be:
- 1) applies(self, entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool
+ 1) applies(entity_state: EntityState, shift_start: datetime, shift_end: datetime) -> bool
  if True:
  2) EntityRequirement().cost [to get the cost]
 
@@ -200,10 +200,15 @@ class RelativeRequirement(EntityRequirement):
         return created
 
     def applies(self, entity_state: 'entitystate.EntityState', shift_start: datetime, shift_end: datetime) -> bool:
+        distance = entity_state.last_schedule_distance_hours(shift_start, shift_end)
+
+        if distance == -1:
+            return False
+
         if self._during:
-            return (entity_state.last_schedule_distance_hours(shift_start, shift_end)) <= self._distance
+            return distance <= self._distance
         elif self._after:
-            return (entity_state.last_schedule_distance_hours(shift_start, shift_end)) > self._distance
+            return distance > self._distance
         else:
             return False
 

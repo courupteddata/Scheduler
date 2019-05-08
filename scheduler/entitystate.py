@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List
+import sqlite3
 
 
 class EntityState:
@@ -19,34 +20,41 @@ class EntityState:
             else:
                 return NotImplemented
 
-    def __init__(self):
-        self.hours_worked: List[EntityState.WorkedEntry] = []
-        # self._last_schedule: datetime = datetime(year=1, month=1, day=1)
-
-    def scheduled(self, shift_start: datetime, hours_worked: [float, timedelta]) -> None:
-        if isinstance(hours_worked, timedelta):
-            self.hours_worked.append(EntityState.WorkedEntry(shift_start, hours_worked.total_seconds() / 3600.0))
-        else:
-            self.hours_worked.append(EntityState.WorkedEntry(shift_start, hours_worked))
-
-        # self.last_schedule = shift_start
+    def __init__(self, db_connection: sqlite3.Connection, entity_id: int):
+        self.db_connection = db_connection
+        self.entity_id = entity_id
 
     def hours_worked_in(self, start: datetime, end: datetime) -> float:
-        # TODO: Change hours worked to a more efficient data structure for this operation
-        total = 0
-        for entry in self.hours_worked:
-            if start <= entry.shift_start <= end:
-                total += entry.hours_worked
-        return total
+        result = self.db_connection.execute('SELECT SUM(strftime(\'%s\', end) - strftime(\'%s\', start))/3600.0 '
+                                            'FROM shift '
+                                            'WHERE entity_id=? '
+                                            'AND start '
+                                            'BETWEEN datetime(?) AND datetime(?);',
+                                            (self.entity_id, start.isoformat(), end.isoformat())).fetchone()
+
+        if result is None:
+            return 0
+        else:
+            return result[0]
 
     def last_schedule_distance_hours(self, start: datetime, end: datetime) -> float:
-        # Added because what if we are filling in a spot and don't know the order
-        # TODO: optimize this
-        min_distance = 1000
-        for entry in self.hours_worked:
-            min_distance = min(
-                min_distance,
-                abs((entry.shift_start - start).total_seconds() / 3600.0),
-                abs(((entry.shift_start + timedelta(hours=entry.hours_worked)) - end).total_seconds() / 3600.0))
+        # Case one: there is overlap
+        result = self.db_connection.execute('SELECT id FROM shift '
+                                            'WHERE entity_id=? '
+                                            'AND ((start BETWEEN datetime(?) AND datetime(?)) '
+                                            'OR (end BETWEEN datetime(?) AND datetime(?)))',
+                                            (self.entity_id, start.isoformat(), end.isoformat(),
+                                             start.isoformat(), end.isoformat())).fetchall()
+        if len(result) > 0:
+            return 0
 
-        return min_distance
+        # Case Two: no overlap, just find the min distance
+        result = self.db_connection.execute('SELECT MIN(ABS(strftime(\'%s\', start) - strftime(\'%s\', ?))), '
+                                            'MIN(ABS(strftime(\'%s\', end) - strftime(\'%s\', ?))) '
+                                            'FROM shift '
+                                            'WHERE entity_id=?',
+                                            (start.isoformat(), end.isoformat(), self.entity_id)).fetchone()
+        if result is None:
+            return -1
+        else:
+            return min(result[0], result[1])

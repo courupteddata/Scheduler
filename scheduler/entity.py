@@ -7,23 +7,15 @@ from . import entitystate
 
 if TYPE_CHECKING:
     # Needed only for typing
-    from . import locationmanager, entityrequirement
+    from . import entityrequirement
 
 
 class Entity:
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, entity_id: int):
         self.name = name
-        self.state: entitystate.EntityState = entitystate.EntityState()
+        self.entity_id = entity_id
         self.requirements: List['entityrequirement.EntityRequirement'] = []
-        self.locations: Set['locationmanager.Location'] = set()
-        # self.entity_id = str(uuid.uuid1(random.getrandbits(48) | 0x010000000000)) TODO: Here
-
-    def clear_state(self) -> None:
-        """
-        Resets the entity state so that it looks like they were never scheduled
-        """
-        self.state: entitystate.EntityState = entitystate.EntityState()
 
     def cost_to_schedule(self, shift_start: datetime, shift_end: datetime) -> float:
         """
@@ -45,14 +37,6 @@ class Entity:
             return 0
         else:
             return total_cost/req_count
-
-    def schedule(self, shift_start: datetime, shift_end: datetime) -> None:
-        """
-        Updates the state to schedule for a particular shift
-        :param shift_start:
-        :param shift_end:
-        """
-        self.state.scheduled(shift_start, (shift_end - shift_start))
 
     def add_requirement(self, new_requirement: 'entityrequirement.EntityRequirement'):
         self.requirements.append(new_requirement)

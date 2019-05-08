@@ -1,6 +1,5 @@
-from typing import Dict, Union, List, Set, TYPE_CHECKING
-from scheduler import shared
-import sqlite3
+from typing import Tuple, Union, List, Set, TYPE_CHECKING
+from . import shared
 
 from . import locationmanager, entity
 
@@ -12,38 +11,26 @@ if TYPE_CHECKING:
 class EntityManager:
 
     def __init__(self):
-        self.connection = shared.connect_to_db()
+        self.connection = shared.DB().get_connection()
+        shared.DB.create_all_tables()
 
-        self.connection.execute(shared.ENTITY_TABLE_CREATE)
-        self.connection.execute(shared.REQUIREMENTS_TABLE_CREATE)
+    def create_entity(self, name: str) -> int:
+        inserted_id = self.connection.execute('INSERT INTO entity(name) VALUES (?);', (name,)).lastrowid
         self.connection.commit()
 
-    def add_entity(self, name: str) -> bool:
-        temp = entity.Entity(name)
-        self.entities[temp.entity_id] = temp
-        return True
+        return inserted_id
 
-    def remove_entity(self, entity_id: str) -> bool:
-        if entity_id in self.entities:
-            del self.entities[entity_id]
-            return True
-        return False
+    def delete_entity(self, entity_id: int) -> bool:
+        modified_row_count = self.connection.execute('DELETE FROM entity WHERE id=?;', (entity_id,)).rowcount
+        self.connection.commit()
 
-    def get_entities(self) -> List[entity.Entity]:
-        return list(self.entities.values())
+        return modified_row_count > 0
 
-    def get_entities_by_location(self) -> Dict[locationmanager.Location, List[entity.Entity]]:
-        temp = {None: []}
-        for loc in self.location_manager.locations:
-            temp[loc] = []
-        for entity_value in self.entities.values():
-            if len(entity_value.locations) == 0:
-                temp[None].append(entity_value)
+    def get_entity(self) -> List[Tuple[int, str]]:
+        return [(ent[0], ent[1]) for ent in self.connection.execute('SELECT id,name FROM entity;')]
 
-            for entity_loc in entity_value.locations:
-                temp[entity_loc].append(entity_value)
+    def build_entity_by_id(self, entity_id: int):
 
-        return temp
 
     """
     Requirement management of an entity

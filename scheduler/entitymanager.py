@@ -30,6 +30,8 @@ class EntityManager:
         return [(ent[0], ent[1]) for ent in self.connection.execute('SELECT id,name FROM entity;')]
 
     def build_entity_by_id(self, entity_id: int):
+        pass
+
 
 
     """

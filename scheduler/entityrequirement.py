@@ -20,6 +20,7 @@
 from datetime import datetime, time, timedelta
 from enum import Enum, auto
 from typing import TYPE_CHECKING
+from dateutil import parser
 
 if TYPE_CHECKING:
     # Needed only for typing
@@ -70,6 +71,13 @@ class EntityRequirement:
     def cost(self, cost: float) -> None:
         self._cost = cost
 
+    def serialize(self) -> dict:
+        return {"label": self.label, "cost": self._cost, "is_relative": self.is_relative}
+
+    @classmethod
+    def unserialize(cls, data: dict):
+        return cls(data['label'], data['cost'], data['is_relative'])
+
 
 class TimeFrameRequirement(EntityRequirement):
     class Types(Enum):
@@ -92,6 +100,43 @@ class TimeFrameRequirement(EntityRequirement):
         # TimeRange Typed
         self._time_start: time = self._datetime_start.time()
         self._time_end: time = self._datetime_start.time()
+
+    def serialize(self) -> dict:
+        data = {"label": self.label,
+                "cost": self.cost,
+                "time_frame_type": self._time_frame_type.name,
+                "is_relative": self.is_relative}
+
+        if self._time_frame_type is TimeFrameRequirement.Types.DAY_OF_WEEK:
+            data["day_of_week"] = self._day_of_week
+        elif self._time_frame_type is TimeFrameRequirement.Types.DATE_RANGE:
+            data["datetime_start"] = self._datetime_start.isoformat()
+            data["datetime_end"] = self._datetime_end.isoformat()
+        elif self._time_frame_type is TimeFrameRequirement.Types.TIME_RANGE:
+            data["time_start"] = self._time_start.isoformat()
+            data["time_end"] = self._time_end.isoformat()
+
+        return data
+
+    @classmethod
+    def unserialize(cls, data: dict):
+        created = cls(data["label"], data["cost"])
+
+        if data['time_frame_type'] == TimeFrameRequirement.Types.DAY_OF_WEEK.name:
+            created._day_of_week = data["day_of_week"]
+            created._time_frame_type = TimeFrameRequirement.Types.DAY_OF_WEEK
+        elif data['time_frame_type'] == TimeFrameRequirement.Types.DATE_RANGE.name:
+            created._datetime_start = parser.parse(data["datetime_start"])
+            created._datetime_end = parser.parse(data["datetime_end"])
+            created._time_frame_type = TimeFrameRequirement.Types.DATE_RANGE
+        elif data['time_frame_type'] == TimeFrameRequirement.Types.TIME_RANGE.name:
+            created._time_start = parser.parse(data["time_start"]).time()
+            created._time_end = parser.parse(data["time_end"]).time()
+            created._time_frame_type = TimeFrameRequirement.Types.TIME_RANGE
+        else:
+            created._time_frame_type = TimeFrameRequirement.Types.UNDEFINED
+
+        return created
 
     @classmethod
     def create_day_week_requirement(cls, label: str, day_of_week: datetime, cost: float):
@@ -169,6 +214,23 @@ class RelativeRequirement(EntityRequirement):
         self._during: bool = False
         self._after: bool = False
 
+    def serialize(self) -> dict:
+        return {"label": self.label,
+                "cost": self.cost,
+                "is_relative": self.is_relative,
+                "during": self._during,
+                "after": self._after,
+                "distance": self._distance}
+
+    @classmethod
+    def unserialize(cls, data: dict):
+        created = cls(data["label"], data["cost"])
+        created._during = data["during"]
+        created._after = data["after"]
+        created._distance = data["distance"]
+
+        return created
+
     @classmethod
     def create_relative_during_requirement(cls, label: str, distance: timedelta, cost: float):
         """
@@ -229,6 +291,29 @@ class TotalsRequirement(EntityRequirement):
 
         # fixed window requirement, uses same start
         self._end: datetime = self._start
+
+    def serialize(self) -> dict:
+        return {"label": self.label,
+                "cost": self._cost,
+                "is_relative": self.is_relative,
+                "total_requirement": self.total_requirement,
+                "is_rolling": self.is_rolling,
+                "scale": self._scale,
+                "start": self._start.isoformat(),
+                "length": self._length.total_seconds()/3600.0,
+                "end": self._end.isoformat()}
+
+    @classmethod
+    def unserialize(cls, data: dict):
+        created = cls(data["label"], data["cost"])
+        created.total_requirement = data["total_requirement"]
+        created.is_rolling = data["is_rolling"]
+        created._scale = data["scale"]
+        created._start = parser.parse(data["start"])
+        created._length = data["length"]
+        created._end =  parser.parse(data["end"])
+
+        return created
 
     @classmethod
     def create_rolling_totals_requirement(cls, label: str, start: datetime, length: timedelta, total_requirement: float,

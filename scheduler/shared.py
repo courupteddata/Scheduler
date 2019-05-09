@@ -36,7 +36,7 @@ class DB:
                                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' \
                                'entity_id INTEGER NOT NULL,' \
                                'type TEXT NOT NULL, ' \
-                               'json_data BLOB NOT NULL,' \
+                               'json_data TEXT NOT NULL,' \
                                'FOREIGN KEY (entity_id) REFERENCES entity(id) ON DELETE CASCADE);'
 
     def __init__(self):

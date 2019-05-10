@@ -45,7 +45,7 @@ class DB:
                         'message TEXT);'
 
     def __init__(self):
-        self.db = sqlite3.connect("scheduler.db")
+        self.db = sqlite3.connect("scheduler.db", check_same_thread=False)
 
     def get_connection(self) -> sqlite3.Connection:
         return self.db

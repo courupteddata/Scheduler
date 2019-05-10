@@ -66,6 +66,12 @@ class ShiftManager:
         self.connection.commit()
         return modified_row_count
 
+    def fill_shift_by_id(self, shift_id: int, entity_id: int) -> int:
+        modified_row_count = self.connection.execute("UPDATE shift SET entity_id=? WHERE id=?",
+                                                     (entity_id, shift_id)).rowcount
+        self.connection.commit()
+        return modified_row_count
+
     def get_shift_by_location_id(self, location_id: int = -1) -> List[Shift]:
         if location_id == -1:
             return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
@@ -165,3 +171,11 @@ class ShiftManager:
         self.connection.commit()
 
         return count
+
+    def get_total_shift_count(self, location_id: int) -> int:
+        count = self.connection.execute("SELECT COUNT(*) FROM shift WHERE location_id=?", (location_id,)).fetchone()
+
+        if count is None:
+            return 0
+
+        return count[0]

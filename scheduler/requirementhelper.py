@@ -16,8 +16,8 @@ class RequirementType(Enum):
 
 
 def rebuild_requirement_from_requirement_id(requirement_id: int,
-                                db_connection: 'sqlite3.Connection') -> \
-        Union['entityrequirement.EntityRequirement', None]:
+                                            db_connection: 'sqlite3.Connection') -> \
+                                                                    Union['entityrequirement.EntityRequirement', None]:
 
     data = db_connection.execute("SELECT type,json_data FROM requirement WHERE id=?;",
                                  (requirement_id,)).fetchone()

@@ -39,6 +39,11 @@ class DB:
                                'json_data TEXT NOT NULL,' \
                                'FOREIGN KEY (entity_id) REFERENCES entity(id) ON DELETE CASCADE);'
 
+    WORK_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS work (' \
+                        'id INTEGER PRIMARY KEY AUTOINCREMENT,' \
+                        'progress REAL NOT NULL,' \
+                        'message TEXT);'
+
     def __init__(self):
         self.db = sqlite3.connect("scheduler.db")
 
@@ -54,6 +59,7 @@ class DB:
         temp.db.execute(DB.ENTITY_LOCATION_TABLE_CREATE)
         temp.db.execute(DB.SHIFT_TABLE_CREATE)
         temp.db.execute(DB.REQUIREMENT_TABLE_CREATE)
+        temp.db.execute(DB.WORK_TABLE_CREATE)
         temp.db.commit()
 
         temp.db.close()

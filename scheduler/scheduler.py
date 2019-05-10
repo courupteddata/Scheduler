@@ -1,9 +1,9 @@
-from typing import Dict, TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, List, Tuple
 import heapq
-from . import entitymanager, shiftmanager
+from . import entitymanager, shiftmanager, locationmanager
 
 if TYPE_CHECKING:
-    from . import locationmanager, entity
+    from . import entity
 
 
 class Scheduler:
@@ -11,20 +11,15 @@ class Scheduler:
     def __init__(self, max_cost: float = 10, step_size: float = .5):
         # Use this to add and modify all of the entities
         self.entity_manager = entitymanager.EntityManager()
-        self.schedule: Dict['locationmanager.Location', shiftmanager.Schedule] = {}
+        self.shift_manager = shiftmanager.ShiftManager()
+        self.location_manager = locationmanager.LocationManager()
         self.step_size = step_size
         self.max_cost = max_cost
 
-    def set_schedule_for_location(self, loc: 'locationmanager.Location', sched: shiftmanager.Schedule):
-        self.schedule[loc] = sched
 
-    def fill_schedule_for_location(self, loc: 'locationmanager.Location',
-                                   entities: List['entity.Entity']) -> (bool, str):
-        if loc not in self.schedule:
-            return False, f"Location {loc.label} does not have a schedule."
-
+    def fill_schedule_for_location(self, location_id: int) -> int:
         current_cost_limit = self.step_size
-        num_empty_shifts = 1
+
 
         while current_cost_limit <= self.max_cost and num_empty_shifts > 0:
             num_empty_shifts = 0

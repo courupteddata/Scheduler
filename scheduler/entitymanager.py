@@ -101,4 +101,20 @@ class EntityManager:
 
         return [(req[0], req[1], requirementhelper.rebuild_from_data(req[1], req[2])) for req in data]
 
+    def get_requirement_id(self, requirement_id: int) -> Union[Tuple[str, 'entityrequirement.EntityRequirement'], None]:
+        data = self.connection.execute("SELECT type,json_data FROM requirement "
+                                       "WHERE id=?;", (requirement_id,)).fetchone()
 
+        if data is None:
+            return None
+
+        return data[0], requirementhelper.rebuild_from_data(data[0], data[1])
+
+    def get_location_for_entity(self, entity_id: int) -> List[Tuple[int, str]]:
+        locations = self.connection.execute("SELECT location_id FROM entity_location WHERE entity_id=?;",
+                                            (entity_id,)).fetchall()
+
+        if len(locations) == 0:
+            return []
+
+        return self.connection.executemany("SELECT id,label FROM location WHERE id=?", locations).fetchall()

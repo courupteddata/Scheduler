@@ -55,7 +55,7 @@ def entity_id_delete(entity_id: int):
     if not shared_entity_manager.delete_entity(entity_id):
         return jsonify({"error": "entity_id not found"}), 400
 
-    return jsonify({})
+    return jsonify({"items_deleted": 1})
 
 
 @entity_api.route("/entity/<int:entity_id>/requirement", methods=['GET'])
@@ -115,7 +115,7 @@ def entity_requirement_post(entity_id: int):
                 return jsonify({"error": "Missing datetime_start or datetime_end that should be IOS8601 format"}), 400
         elif time_frame_type == entityrequirement.TimeFrameRequirement.Types.TIME_RANGE.name:
             if "time_start" not in data["data"] or "time_end" not in data["data"]:
-                return jsonify({"error": "Missing time_start or time_end that should be IOS8601 format (HH:MM:SS"}), 400
+                return jsonify({"error": "Missing time_start or time_end that should be IOS8601 format HH:MM:SS"}), 400
         try:
             requirement = entityrequirement.TimeFrameRequirement.unserialize(data["data"])
         except Exception as e:
@@ -141,17 +141,50 @@ def entity_requirement_post(entity_id: int):
             error_message += "Missing is_rolling (boolean). "
         if "scale" not in data["data"]:
             error_message += "Missing scale (boolean). "
-        if "length" not in data["data"]:
-            error_message += "Missing length (float, hours) "
         if "start" not in data["data"]:
             error_message += "Missing start (ISO8601 datetime format) "
-        if "end" not in data["data"]:
-            error_message += "Missing end (ISO8601 datetime format) "
+
+        if error_message != "":
+            return jsonify({"error": error_message}), 400
+
+        if "length" not in data["data"] and data["data"]["is_rolling"]:
+            error_message += "Missing length (float, hours) "
+        else:
+            data["data"]["length"] = 0
+
+        if "end" not in data["data"] and not data["data"]["is_rolling"]:
+            error_message += "Missing end (ISO8601 datetime format)"
+        else:
+            data["data"]["end"] = "0001-01-01T00:00:00"
+
         if error_message != "":
             return jsonify({"error": error_message}), 400
         try:
             requirement = entityrequirement.TotalsRequirement.unserialize(data["data"])
         except Exception as e:
             return jsonify({"error": f"failed to parse. {str(e)}"}), 400
-        
+
     return jsonify({"requirement_id": shared_entity_manager.add_requirement_to_entity(entity_id, requirement)})
+
+
+@entity_api.route("/entity/<int:entity_id>/requirement/<int:requirement_id>", methods=['GET', 'DELETE'])
+def entity_requirement_id_get_delete(entity_id: int, requirement_id: int):
+    if request.method == 'GET':
+        data = shared_entity_manager.get_requirement_id(requirement_id)
+        if data is None:
+            return jsonify({"error": "Unable to find requirement"}), 400
+        return jsonify({"requirement_id": requirement_id,
+                        "requirement_type": data[0],
+                        "requirement_data": data[1].serialize()})
+    else:
+        return jsonify({"items_deleted": shared_entity_manager.delete_requirement(requirement_id)})
+
+
+@entity_api.route("/entity/requirement/<int:requirement_id>", methods=['GET', 'DELETE'])
+def entity_requirement_id_get_delete_no_ent(requirement_id: int):
+    return entity_requirement_id_get_delete(0, requirement_id)
+
+
+@entity_api.route("/entity/<int:entity_id>/location", methods=['GET'])
+def entity_get_location(entity_id: int):
+    return jsonify({"location": shared_entity_manager.get_location_for_entity(entity_id)})

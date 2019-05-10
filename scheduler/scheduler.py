@@ -32,6 +32,8 @@ class Scheduler:
                 options = []
 
                 for person in entities:
+                    if person is None:
+                        continue
                     count += 1
                     cost_to_schedule = self.entity_manager.get_cost_to_schedule(person, shift.start, shift.end)
                     heapq.heappush(options, (cost_to_schedule, count, person))

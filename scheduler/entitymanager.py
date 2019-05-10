@@ -1,4 +1,4 @@
-from typing import Tuple, Union, List, TYPE_CHECKING
+from typing import Tuple, Union, List, TYPE_CHECKING, Dict
 from . import shared, entitystate
 from datetime import datetime
 
@@ -21,14 +21,21 @@ class EntityManager:
 
         return inserted_id
 
+    def update_entity_name(self, entity_id: int, name: str):
+        modified_row_count = self.connection.execute('UPDATE entity SET name=? WHERE id=?;', (name, entity_id)).rowcount
+        self.connection.commit()
+
+        return modified_row_count
+
     def delete_entity(self, entity_id: int) -> bool:
         modified_row_count = self.connection.execute('DELETE FROM entity WHERE id=?;', (entity_id,)).rowcount
         self.connection.commit()
 
         return modified_row_count > 0
 
-    def get_entity(self) -> List[Tuple[int, str]]:
-        return [(ent[0], ent[1]) for ent in self.connection.execute('SELECT id,name FROM entity;').fetchall()]
+    def get_entity(self) -> List[Dict]:
+        return [{"entity_id": ent[0], "entity_name": ent[1]} for ent
+                in self.connection.execute('SELECT id,name FROM entity;').fetchall()]
 
     def get_entity_by_id(self, entity_id: int) -> Union[None, entity.Entity]:
         data = self.connection.execute('SELECT name FROM entity WHERE id=?;', (entity_id,)).fetchone()
@@ -44,7 +51,7 @@ class EntityManager:
         if len(requirements) == 0:
             return created_entity
 
-        created_entity.requirements = list(zip(*requirements))[1]
+        created_entity.requirements = list(zip(*requirements))[2]
 
         return created_entity
 
@@ -80,13 +87,15 @@ class EntityManager:
         self.connection.commit()
         return to_return
 
-    def get_requirements_for_entity(self, entity_id: int) -> List[Tuple[int, 'entityrequirement.EntityRequirement']]:
+    def get_requirements_for_entity(self, entity_id: int) -> \
+            List[Tuple[int, str, 'entityrequirement.EntityRequirement']]:
+
         data = self.connection.execute("SELECT id,type,json_data "
                                        "FROM requirement WHERE entity_id=?", (entity_id,)).fetchall()
 
         if len(data) == 0:
             return []
 
-        return [(req[0], requirementhelper.rebuild_from_data(req[1], req[2])) for req in data]
+        return [(req[0], req[1], requirementhelper.rebuild_from_data(req[1], req[2])) for req in data]
 
 

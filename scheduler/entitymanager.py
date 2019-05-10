@@ -37,16 +37,19 @@ class EntityManager:
         return [{"entity_id": ent[0], "entity_name": ent[1]} for ent
                 in self.connection.execute('SELECT id,name FROM entity;').fetchall()]
 
-    def get_entity_by_id(self, entity_id: int) -> Union[None, entity.Entity]:
+    def get_entity_by_id(self, entity_id: int, include_requirements: bool = True) -> Union[None, entity.Entity]:
         data = self.connection.execute('SELECT name FROM entity WHERE id=?;', (entity_id,)).fetchone()
 
         if data is None:
             return None
         name = data[0]
 
-        requirements = self.get_requirements_for_entity(entity_id)
-
         created_entity = entity.Entity(name, entity_id)
+
+        if not include_requirements:
+            return created_entity
+
+        requirements = self.get_requirements_for_entity(entity_id)
 
         if len(requirements) == 0:
             return created_entity

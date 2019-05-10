@@ -19,7 +19,7 @@
 
 from datetime import datetime, time, timedelta
 from enum import Enum, auto
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 from dateutil import parser
 
 if TYPE_CHECKING:
@@ -139,16 +139,20 @@ class TimeFrameRequirement(EntityRequirement):
         return created
 
     @classmethod
-    def create_day_week_requirement(cls, label: str, day_of_week: datetime, cost: float):
+    def create_day_week_requirement(cls, label: str, day_of_week: Tuple[datetime, int], cost: float):
         """
 
         :param label: the label to give the requirement
-        :param day_of_week: a date that has the correct day of the week
+        :param day_of_week: a date that has the correct day of the week, or 0-6 Monday-Sunday
         :param cost:
         :return:
         """
         created = cls(label, cost)
-        created._day_of_week = day_of_week.weekday()
+        if isinstance(day_of_week, datetime):
+            created._day_of_week = day_of_week.weekday()
+        else:
+            created._day_of_week = day_of_week
+
         created._time_frame_type = TimeFrameRequirement.Types.DAY_OF_WEEK
 
         return created
@@ -310,8 +314,8 @@ class TotalsRequirement(EntityRequirement):
         created.is_rolling = data["is_rolling"]
         created._scale = data["scale"]
         created._start = parser.parse(data["start"])
-        created._length = data["length"]
-        created._end =  parser.parse(data["end"])
+        created._length = timedelta(hours=data["length"])
+        created._end = parser.parse(data["end"])
 
         return created
 

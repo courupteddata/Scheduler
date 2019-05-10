@@ -172,10 +172,25 @@ class ShiftManager:
 
         return count
 
-    def get_total_shift_count(self, location_id: int) -> int:
+    def get_total_shift_count_by_location_id(self, location_id: int) -> int:
         count = self.connection.execute("SELECT COUNT(*) FROM shift WHERE location_id=?", (location_id,)).fetchone()
 
         if count is None:
             return 0
 
         return count[0]
+
+    def get_empty_shift_count_by_location_id(self, location_id: int) -> int:
+        count = self.connection.execute("SELECT COUNT(*) FROM shift WHERE location_id=? "
+                                        "AND entity_id=-1;", (location_id,)).fetchone()
+
+        if count is None:
+            return 0
+
+        return count[0]
+
+    def get_empty_shift_by_location_id(self, location_id: int) -> List[Shift]:
+        return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
+                      info=data[3], entity_id=data[4], location_id=data[5])
+                for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
+                                                    "FROM shift WHERE location_id=? AND NOT entity_id=-1;", (location_id,))]

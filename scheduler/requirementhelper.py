@@ -15,7 +15,7 @@ class RequirementType(Enum):
     TOTALS = auto()
 
 
-def rebuild_requirement_from_id(requirement_id: int,
+def rebuild_requirement_from_requirement_id(requirement_id: int,
                                 db_connection: 'sqlite3.Connection') -> \
         Union['entityrequirement.EntityRequirement', None]:
 
@@ -27,6 +27,12 @@ def rebuild_requirement_from_id(requirement_id: int,
 
     req_type = data[0]
     data = data[1]
+
+    return rebuild_from_data(req_type, data)
+
+
+def rebuild_from_data(req_type: str, json_data: str) -> Union['entityrequirement.EntityRequirement', None]:
+    data = json.loads(json_data)
 
     if req_type == RequirementType.BASE.name:
         return entityrequirement.EntityRequirement.unserialize(data)

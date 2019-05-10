@@ -27,7 +27,7 @@ class DB:
                          'start TEXT NOT NULL, ' \
                          'end TEXT NOT NULL, ' \
                          'info TEXT, ' \
-                         'entity_id INTEGER DEFAULT NULL, ' \
+                         'entity_id INTEGER DEFAULT -1, ' \
                          'location_id INTEGER NOT NULL ,' \
                          'FOREIGN KEY(entity_id) REFERENCES entity(id) ON DELETE SET DEFAULT,' \
                          'FOREIGN KEY(location_id) REFERENCES location(id) ON DELETE CASCADE);'

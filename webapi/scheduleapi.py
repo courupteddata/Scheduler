@@ -1,5 +1,5 @@
 from flask import request, jsonify, Flask, Blueprint, abort
-from scheduler import schedule
+from scheduler import shiftmanager
 from dateutil import parser
 
 
@@ -31,13 +31,13 @@ def create_schedule_from_template():
     for day in data:
         template.append([])
         for entry in day:
-            template[index].append(schedule.Shift(parser.parse(entry["start"]),
-                                                  parser.parse(entry["end"]),
-                                                  entry.get("label", "")))
+            template[index].append(shiftmanager.Shift(parser.parse(entry["start"]),
+                                                      parser.parse(entry["end"]),
+                                                      entry.get("label", "")))
         index += 1
 
     return {
-        "response": schedule.Schedule.create_template_from_sample(end=parser.parse(data["end"]), week=template).to_json(),
+        "response": shiftmanager.Schedule.create_template_from_sample(end=parser.parse(data["end"]), week=template).to_json(),
         "status": 200,
         "mimetype": "application/json"
         }

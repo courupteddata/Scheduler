@@ -2,7 +2,7 @@ from flask import request, jsonify, Blueprint
 
 from scheduler import workmanager
 
-work_api = Blueprint('work_api', __name__)
+work_api = Blueprint('work_manager_api', __name__)
 
 shared_work_manager = workmanager.WorkManager()
 
@@ -14,7 +14,7 @@ def work_get():
     return jsonify({"work": [{"work_id": item[0], "work_progress": item[1], "work_message": item[2]} for item in data]})
 
 
-@work_api.route("/work", method=['DELETE'])
+@work_api.route("/work", methods=['DELETE'])
 def work_delete_all():
     return jsonify({"work_deleted": shared_work_manager.delete_all_entry()})
 
@@ -29,4 +29,3 @@ def work_delete_get_single(work_id: int):
             return jsonify({"error": "shift_id not found"}), 400
         else:
             return jsonify({"work": data})
-

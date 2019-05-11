@@ -50,7 +50,7 @@ class Scheduler:
                                                 f"Still working... There are still {num_empty_shifts} "
                                                 f"empty shifts for location: {location_name}.")
 
-        self.work_manager.update_work_entry(work_id, num_empty_shifts / starting_empty,
+        self.work_manager.update_work_entry(work_id, num_empty_shifts / starting_empty if starting_empty != 0 else 100,
                                             f"Done... There are still {num_empty_shifts} "
                                             f"empty shifts for location {location_name}.")
 
@@ -80,7 +80,7 @@ class Scheduler:
 
         work_id = self.work_manager.add_work_entry(f"Starting work on location: {location_label}")
 
-        Thread(target=self.fill_schedule_for_location, args=(self, location_id, work_id)).start()
+        Thread(target=self.fill_schedule_for_location, args=(location_id, work_id)).start()
 
         return work_id
 
@@ -106,7 +106,7 @@ class Scheduler:
             work_id = self.work_manager.add_work_entry(f"Starting work on location: {temp[3]}")
             work.append((temp[2], work_id))
 
-        Thread(target=self.fill_list_of_schedules, args=(self, work)).start()
+        Thread(target=self.fill_list_of_schedules, args=[work]).start()
 
         #  Returns list of (location_id, work_id)
         return work

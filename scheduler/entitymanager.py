@@ -110,7 +110,7 @@ class EntityManager:
 
         return data[0], requirementhelper.rebuild_from_data(data[0], data[1])
 
-    def get_location_for_entity(self, entity_id: int) -> List[Tuple[int, str]]:
+    def get_location_for_entity(self, entity_id: int) -> List[Dict]:
         locations = self.connection.execute("SELECT location_id FROM entity_location WHERE entity_id=?;",
                                             (entity_id,)).fetchall()
 

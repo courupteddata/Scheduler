@@ -117,8 +117,37 @@ class EntityManager:
         if len(locations) == 0:
             return []
 
-        data = [self.connection.execute('SELECT id,label FROM location WHERE id=?;', loc).fetchone() for loc in locations]
+        data = [self.connection.execute('SELECT id,label FROM location '
+                                        'WHERE id=?;', loc).fetchone() for loc in locations]
 
         return [{"location_id": item[0], "location_label": item[1]} for item in data]
 
+    def get_stats_for_entity(self, entity_id: int, start: datetime = None, end: datetime = None) -> List[Dict]:
 
+        where_query_string = ""
+        query_data = ()
+        previous = True
+
+        where_query_string += " entity_id=?"
+        query_data += (entity_id,)
+
+        if start is not None:
+            if previous:
+                where_query_string += " AND"
+            previous = True
+            where_query_string += " start >= datetime(?)"
+            query_data += (start.isoformat(),)
+
+        if end is not None:
+            if previous:
+                where_query_string += " AND"
+            where_query_string += " start <= datetime(?)"
+            query_data += (end.isoformat(),)
+
+        if where_query_string != "":
+            where_query_string = " WHERE" + where_query_string
+
+        return [{"location_id": data[0], "shift_count": data[1], "total_hours": data[2]} for data in
+                self.connection.execute(f"SELECT location_id,COUNT(*),"
+                                        f"SUM(strftime(\'%s\', end) - strftime(\'%s\', start))/3600.0 FROM shift "
+                                        f"{ where_query_string } GROUP BY location_id;", query_data).fetchall()]

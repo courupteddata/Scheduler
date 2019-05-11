@@ -83,7 +83,7 @@
       employee.constraints.forEach(function(constraint) {
         output += constraint.label;
       });
-      output += "</td><td>" + "<a href=\"edit_employee.html?id=" + employee.id + "\">Edit</td></tr>";
+      output += "</td><td>" + "<a href=" + employee.id + "\"edit_employee.html?id=\">Edit</td></tr>";
     });
     document.getElementsByTagName("tbody")[0].innerHTML = output;
   </script>
@@ -103,7 +103,7 @@
     var output = "";
     data.schedules.forEach(function(schedule) {
       output += "<tr><td scope=\"row\">" + schedule.date_start + " - " + schedule.date_end + "</td><td>" +
-       schedule.status + "</td><td>" + "<a href=\"view_schedule.html?id=" + schedule.id + "\">View</td></tr>";
+       schedule.status + "</td><td>" + "<a href=" + schedule.id + "\"view_schedule.html?id=\">View</td></tr>";
     });
     document.getElementsByTagName("tbody")[1].innerHTML = output;
   </script>

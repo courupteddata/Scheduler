@@ -81,7 +81,7 @@
 
     var output = "";
     employee.constraints.forEach(function(constraint) {
-        output += "<tr><td>" + constraint.label + "</td><td>" + "<a href=\"edit_constraint.html?id=" + constraint.id + "\">Edit</td></tr>";;
+        output += "<tr><td>" + constraint.label + "</td><td>" + "<a href=" + constraint.id + "\"edit_constraint.html?id=\">Edit</td></tr>";;
     });
     document.getElementsByTagName("tbody")[0].innerHTML = output;
   </script>

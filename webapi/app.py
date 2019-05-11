@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from webapi import entityapi, locationapi, shiftapi, schedulerapi, workapi
 
 app = Flask(__name__)
@@ -17,6 +17,16 @@ def prepare_api():
     :return:
     """
     pass
+
+
+@app.route("/<path:path>")
+def get_static_page(path):
+    return send_from_directory("../UI", path)
+
+
+@app.route("/")
+def get_main_page():
+    return send_from_directory("../UI", "home.html")
 
 
 if __name__ == '__main__':

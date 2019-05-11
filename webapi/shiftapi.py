@@ -1,4 +1,4 @@
-from flask import request, jsonify, Blueprint
+from flask import request, jsonify, Blueprint, make_response
 from dateutil import parser
 from datetime import timedelta
 from scheduler import shiftmanager
@@ -14,6 +14,7 @@ def shift_get():
     start = request.args.get('start', type=str, default=None)
     end = request.args.get('end', type=str, default=None)
     entity_id = request.args.get('entity_id', type=int, default=-2)
+    export = request.args.get('export', type=bool, default=False)
 
     if start is not None:
         try:
@@ -27,8 +28,30 @@ def shift_get():
         except Exception as e:
             return jsonify({"error": f"invalid end. {str(e)}"}), 400
 
-    return jsonify({"shift": [item.serialize() for item in
-                              shared_shift_manager.get_shift_by_location_id(location_id, start, end, entity_id)]})
+    if not export:
+        return jsonify({"shift": [item.serialize() for item in
+                       shared_shift_manager.get_shift_by_location_id(location_id, start, end, entity_id)]})
+
+    data = "\"Subject\",\"Start Date\",\"Start Time\",\"End Date\",\"End Time\",\"Description\",\"Location\"\r\n"
+    shifts = shared_shift_manager.get_shift_by_location_id(location_id, start, end, entity_id)
+
+    empty = "Empty"
+
+    for shift in shifts:
+        start_time = shift.start.time().strftime("%I:%M %p")
+        start_date = shift.start.date().strftime("%m/%d/%Y")
+
+        end_time = shift.end.time().strftime("%I:%M %p")
+        end_date = shift.end.date().strftime("%m/%d/%Y")
+
+        data += f"\"{shared_shift_manager.get_entity_name(shift.entity_id) if shift.entity_id != -1 else empty}\"," \
+            f"\"{start_date}\",\"{start_time}\",\"{end_date}\",\"{end_time}\",\"{shift.info}\"," \
+            f"\"{shared_shift_manager.get_location_label(shift.location_id)}\"\r\n"
+
+    output = make_response(data)
+    output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+    output.headers["Content-Type"] = "text/csv"
+    return output
 
 
 @shift_api.route("/shift", methods=['POST'])

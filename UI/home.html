@@ -46,22 +46,14 @@
         <thead>
           <tr>
             <th scope="col">Dates</th>
-            <th scope="col">Status</th>
+            <th scope="col">Location</th>
             <th scope="col">View</th>
+            <th scope="col">Export to .csv</th>
           </tr>
         </thead>
         <tbody>
         </tbody>
       </table>
-      <div class="container-fluid">
-        <form action="/import.py">
-          <div class="form-group">
-            <label for="import">Import Schedule</label>
-            <input type="file" class="form-control-file" id="import">
-          </div>
-          <button type="submit" class="btn btn-primary" accept=".csv,.ics">Import</button>
-        </form>
-      </div>
     </div>
   </div>
 
@@ -93,17 +85,18 @@
     var data =
     {
       "schedules":[
-        {"id":"0", "date_start":"04/17/19", "date_end":"04/17/20", "status":"Passed"},
-        {"id":"1", "date_start":"04/17/20", "date_end":"04/17/21", "status":"Active"},
-        {"id":"2", "date_start":"04/17/21", "date_end":"04/17/22", "status":"Planned"},
-        {"id":"3", "date_start":"04/17/22", "date_end":"04/17/23", "status":"Active"},
-        {"id":"4", "date_start":"04/17/23", "date_end":"04/17/24", "status":"Active"}
+        {"id":"0", "date_start":"04/17/19", "date_end":"04/17/20", "location":"Emergency Room"},
+        {"id":"1", "date_start":"04/17/20", "date_end":"04/17/21", "location":"Emergency Room"},
+        {"id":"2", "date_start":"04/17/21", "date_end":"04/17/22", "location":"Emergency Room"},
+        {"id":"3", "date_start":"04/17/22", "date_end":"04/17/23", "location":"Emergency Room"},
+        {"id":"4", "date_start":"04/17/23", "date_end":"04/17/24", "location":"Emergency Room"}
       ]
     };
     var output = "";
     data.schedules.forEach(function(schedule) {
       output += "<tr><td scope=\"row\">" + schedule.date_start + " - " + schedule.date_end + "</td><td>" +
-       schedule.status + "</td><td>" + "<a href=\"view_schedule.html?id=" + schedule.id + "\">View</td></tr>";
+       schedule.location + "</td><td>" + "<a href=\"view_schedule.html?id=" + schedule.id + "\">View</td>" +
+       "<td><a href=\"export_schedule.html?id=" + schedule.id + "\">Export</td></tr>";
     });
     document.getElementsByTagName("tbody")[1].innerHTML = output;
   </script>

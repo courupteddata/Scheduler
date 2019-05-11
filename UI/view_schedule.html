@@ -17,7 +17,6 @@
     document.addEventListener('DOMContentLoaded', function() {
       var calendarEl = document.getElementById('calendar');
       var schedule_id = window.location.search.split("=")[1];
-      var today = new Date();
 
       var data =
       {
@@ -34,7 +33,8 @@
         events.push({
           title: shift.label,
           start: shift.start,
-          end: shift.end
+          end: shift.end,
+          id: shift.id
         });
       });
 
@@ -53,7 +53,9 @@
           $('#start_time')[0].value = info.event.start.toISOString().substring(0, 16);
           $('#end_time')[0].value = info.event.end.toISOString().substring(0, 16);
           $('#employee')[0].placeholder = info.event.title;
+          $('#shift_id')[0].value = info.event.id;
           $('#submit')[0].setAttribute('onclick', 'submitEdit(this.form);');
+          $('#delete')[0].removeAttribute('hidden');
           $('.modal-title')[0].innerHTML = 'Edit Shift'
           $('.modal').modal();
         },
@@ -61,6 +63,7 @@
           $('#start_time')[0].value = info.dateStr + "T07:00";
           $('#end_time')[0].value = info.dateStr + "T15:00";
           $('#employee')[0].placeholder = 'Employee';
+          $('#shift_id')[0].value = null;
           $('#submit')[0].setAttribute('onclick', 'submitNew(this.form);');
           $('#delete')[0].setAttribute('hidden', '');
           $('.modal-title')[0].innerHTML = 'Add Shift'
@@ -102,7 +105,7 @@
   <title>View Schedule</title>
 </head>
 <body>
-  <a href="/home.html">Home</a>
+  <a href="home.html">Home</a>
   <div class="modal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -126,6 +129,7 @@
               <label for="employee">Assigned Employee:</label>
               <input type="text" class="form-control" id="employee">
             </div>
+            <input type="text" id="shift_id" hidden>
             <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit">Submit changes</button>
             <button type="button" class="btn btn-danger" data-dismiss="modal" id="delete" onClick="deleteShift(this.form);">Delete Shift</button>
           </form>

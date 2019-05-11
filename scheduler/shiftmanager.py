@@ -235,7 +235,7 @@ class ShiftManager:
         return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
                       info=data[3], entity_id=data[4], location_id=data[5])
                 for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
-                                                    "FROM shift WHERE location_id=? AND NOT entity_id=-1;",
+                                                    "FROM shift WHERE location_id=? AND entity_id=-1;",
                                                     (location_id,))]
 
     def validate_location_id(self, location_id: int) -> bool:
@@ -243,3 +243,15 @@ class ShiftManager:
 
     def validate_entity_id(self, entity_id: int) -> bool:
         return self.connection.execute("SELECT id FROM entity WHERE id=?;", (entity_id,)).fetchone() is not None
+
+    def get_location_label(self, location_id: int) -> str:
+        data = self.connection.execute("SELECT label FROM location WHERE id=?;", (location_id,)).fetchone()
+        if data is None:
+            return ""
+        return data[0]
+
+    def get_entity_name(self, entity_id: int) -> str:
+        data = self.connection.execute("SELECT name FROM entity WHERE id=?;", (entity_id,)).fetchone()
+        if data is None:
+            return ""
+        return data[0]

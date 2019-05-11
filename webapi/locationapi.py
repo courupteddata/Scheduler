@@ -37,3 +37,8 @@ def location_update_entity(location_id: int, entity_id: int):
     else:
         return jsonify({"location_deleted": shared_location_manager.
                        remove_location_from_entity(location_id, entity_id) == 1})
+
+
+@location_api.route("/location/<int:location_id>", methods=['DELETE'])
+def location_delete(location_id: int):
+    return jsonify({"location_deleted": shared_location_manager.delete_location(location_id)})

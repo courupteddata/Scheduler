@@ -79,7 +79,7 @@ class ShiftManager:
         return modified_row_count
 
     def get_shift_by_location_id(self, location_id: int = -1,
-                                 start: datetime = None, end: datetime = None, entity_id: int = -1) -> List[Shift]:
+                                 start: datetime = None, end: datetime = None, entity_id: int = -2) -> List[Shift]:
 
         where_query_string = ""
         query_data = ()
@@ -90,7 +90,7 @@ class ShiftManager:
             where_query_string += " location_id=?"
             query_data += (location_id,)
 
-        if entity_id != -1:
+        if entity_id != -2:
             if previous:
                 where_query_string += " AND"
             previous = True

@@ -13,7 +13,7 @@ def shift_get():
     location_id = request.args.get('location_id', type=int, default=-1)
     start = request.args.get('start', type=str, default=None)
     end = request.args.get('end', type=str, default=None)
-    entity_id = request.args.get('entity_id', type=int, default=-1)
+    entity_id = request.args.get('entity_id', type=int, default=-2)
 
     if start is not None:
         try:

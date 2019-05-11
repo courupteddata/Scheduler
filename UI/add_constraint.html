@@ -84,24 +84,57 @@
       var employee_id = window.location.search.split("=")[1];
       switch(form.elements[2].value) {
         case "Day of Week":
-        $.ajax({
+          $.ajax({
             url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
             type: 'POST',
-            data: {
-              'requirement_type':'TIMEFRAME', 'data':{
-                'cost':parseInt(form.elements[1].value),
-                'label':form.elements[0].value,
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify({
+              "requirement_type":"TIMEFRAME", "data":{
+                "cost":parseInt(form.elements[1].value),
+                "label":form.elements[0].value,
                 "time_frame_type": "DAY_OF_WEEK",
-                'DAY_OF_WEEK':parseInt(form.elements[3].value)
-                }
+                "day_of_week":parseInt(form.elements[3].value)
               }
+            }),
+            success: function( data ) {
+              alert("Constraint submitted");
+            }
           });
           break;
         case "Date Range":
-
+          $.ajax({
+            url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+            type: 'POST',
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify({
+              "requirement_type":"TIMEFRAME", "data":{
+                "cost":parseInt(form.elements[1].value),
+                "label":form.elements[0].value,
+                "time_frame_type": "DATE_RANGE",
+                "datetime_start":form.elements[3].value,
+                "datetime_end":form.elements[4].value,
+              }
+            }),
+            success: function( data ) {
+              alert("Constraint submitted");
+            }
+          });
           break;
         case "Time Range":
-
+          var test = $.ajax({
+            url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+            type: 'POST',
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify({
+              "requirement_type":"TIMEFRAME", "data":{
+                "cost":parseInt(form.elements[1].value),
+                "label":form.elements[0].value,
+                "time_frame_type": "TIME_RANGE",
+                "time_start":form.elements[3].value,
+                "time_end":form.elements[4].value,
+              }
+            })
+          });
           break;
         case "Relative (After)":
 

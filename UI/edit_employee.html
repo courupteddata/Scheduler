@@ -45,7 +45,7 @@
       var output = "";
       document.getElementById("name").value = employee.entity_name;
       employee.entity_requirement.forEach(function(constraint) {
-        output += "<tr><td>" + constraint.requirement_data.label + "</td><td><a href=\"edit_constraint.html?id=" + constraint.requirement_id + "\">Edit</td></tr>";
+        output += "<tr><td>" + constraint.label + "</td><td><a href=\"edit_constraint.html?id=" + constraint.requirement_id + "\">Edit</td></tr>";
       });
       if(employee.entity_requirement.length == 0) {
         output += "<tr><td>No Constraints</td></tr>"
@@ -61,10 +61,8 @@
           url: "http://127.0.0.1:5000/api/v1/entity/" + employee_id,
           type: "PUT",
           data: JSON.stringify({ "entity_id":parseInt(employee_id), "entity_name":form.elements[0].value }),
-          dataType: 'application/json'
+          contentType: 'application/json;charset=UTF-8'
         });
-        console.log(request);
-        console.log(form.elements[0].value);
     };
   </script>
 </body>

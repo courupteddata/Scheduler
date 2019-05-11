@@ -18,8 +18,10 @@ class DB:
     ENTITY_LOCATION_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS entity_location (' \
                                    'entity_id INTEGER NOT NULL, ' \
                                    'location_id INTEGER NOT NULL, ' \
-                                   'FOREIGN KEY(entity_id) REFERENCES entity(id) ON DELETE CASCADE, ' \
-                                   'FOREIGN KEY(location_id) REFERENCES location(id) ON DELETE CASCADE, ' \
+                                   'CONSTRAINT check_ent FOREIGN KEY(entity_id) ' \
+                                   'REFERENCES entity(id) ON DELETE CASCADE, ' \
+                                   'CONSTRAINT check_loc FOREIGN KEY(location_id) ' \
+                                   'REFERENCES location(id) ON DELETE CASCADE, ' \
                                    'PRIMARY KEY(entity_id, location_id));'
 
     SHIFT_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS shift (' \
@@ -29,15 +31,15 @@ class DB:
                          'info TEXT, ' \
                          'entity_id INTEGER DEFAULT -1, ' \
                          'location_id INTEGER NOT NULL ,' \
-                         'FOREIGN KEY(entity_id) REFERENCES entity(id) ON DELETE SET DEFAULT,' \
-                         'FOREIGN KEY(location_id) REFERENCES location(id) ON DELETE CASCADE);'
+                         'CONSTRAINT check_ent FOREIGN KEY(entity_id) REFERENCES entity(id) ON DELETE SET DEFAULT,' \
+                         'CONSTRAINT check_loc FOREIGN KEY(location_id) REFERENCES location(id) ON DELETE CASCADE);'
 
     REQUIREMENT_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS requirement (' \
                                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' \
                                'entity_id INTEGER NOT NULL,' \
                                'type TEXT NOT NULL, ' \
                                'json_data TEXT NOT NULL,' \
-                               'FOREIGN KEY (entity_id) REFERENCES entity(id) ON DELETE CASCADE);'
+                               'CONSTRAINT check_ent FOREIGN KEY (entity_id) REFERENCES entity(id) ON DELETE CASCADE);'
 
     WORK_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS work (' \
                         'id INTEGER PRIMARY KEY AUTOINCREMENT,' \

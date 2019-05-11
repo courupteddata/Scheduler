@@ -1,10 +1,5 @@
-# import uuid
-# import random
 import sqlite3
 
-
-# def create_id() -> str:
-#     return str(uuid.uuid1(random.getrandbits(48) | 0x010000000000))
 
 class DB:
     ENTITY_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS entity (' \

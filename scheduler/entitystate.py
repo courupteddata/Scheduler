@@ -3,22 +3,6 @@ import sqlite3
 
 
 class EntityState:
-    class WorkedEntry:
-        """
-        Contains a sortable entry based on the shift start datetime.
-        Also keeps track of the number of hours worked for a particular shift
-        """
-
-        def __init__(self, shift_start: datetime, hours_worked: float):
-            self.shift_start = shift_start
-            self.hours_worked = hours_worked
-
-        def __lt__(self, other) -> bool:
-            if isinstance(other, EntityState.WorkedEntry):
-                return self.shift_start < other.shift_start
-            else:
-                return NotImplemented
-
     def __init__(self, db_connection: sqlite3.Connection, entity_id: int):
         self.db_connection = db_connection
         self.entity_id = entity_id

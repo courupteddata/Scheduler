@@ -47,8 +47,8 @@
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Dates</th>
             <th scope="col">Location</th>
+            <th scope="col">Dates</th>
             <th scope="col">View</th>
             <th scope="col">Export to .csv</th>
           </tr>
@@ -78,11 +78,13 @@
     jQuery.get("http://127.0.0.1:5000/api/v1/location", function( locations ) {
       var output = "";
       locations.location.forEach(function(location) {
-        output += "<tr><td scope=\"row\"><div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>";
-        output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"date\" class=\"form-control\" id=\"end\"></div> - </td><td>" +
-         schedule.location + "</td><td>" + "<a href=\"view_schedule.html?id=" + schedule.id + "\">View</td>" +
-         "<td><a href=\"export_schedule.html?id=" + schedule.id + "\">Export</td></tr>";
+        output += "<tr><td>" + location.location_label + "</td>"
+        output += "<td scope=\"row\"><div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>"
+        output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"date\" class=\"form-control\" id=\"end\"></div></td>"
+        output += "<td><a href=\"view_schedule.html?location_id=" + location.location_id + "\">View</td>"
+        output += "<td><a onClick=\"export(location.location_id)\">Export</td></tr>";
       });
+
       document.getElementsByTagName("tbody")[1].innerHTML = output;
     });
   </script>

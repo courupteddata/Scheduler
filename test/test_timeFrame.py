@@ -24,14 +24,14 @@ class TestTimeFrame(TestCase):
         timeframe_window = TimeFrame(start_date, end_date, True)
 
         self.assertTrue(start_date in timeframe_window, "Should include edge case for inclusive")
-        self.assertTrue(end_date in timeframe_window, "SHould include edge case for inclusive")
+        self.assertTrue(end_date in timeframe_window, "Should include edge case for inclusive")
         self.assertTrue(datetime.datetime(year=2019, month=1, day=22) in timeframe_window, "Should include valid ranges")
         self.assertFalse(None in timeframe_window, "Should not include None")
         self.assertFalse(datetime.datetime(year=2018, month=1, day=22) in timeframe_window, "Ignore invalid ranges")
 
         timeframe_window = TimeFrame(start_date, end_date, False)
         self.assertFalse(start_date in timeframe_window, "Should not include edge case for not inclusive")
-        self.assertFalse(end_date in timeframe_window, "SHould not include edge case for not inclusive")
+        self.assertFalse(end_date in timeframe_window, "Should not include edge case for not inclusive")
         self.assertTrue(datetime.datetime(year=2019, month=1, day=22) in timeframe_window, "Should include valid ranges")
         self.assertFalse(None in timeframe_window, "Should not include None")
         self.assertFalse(datetime.datetime(year=2018, month=1, day=22) in timeframe_window, "Ignore invalid ranges")

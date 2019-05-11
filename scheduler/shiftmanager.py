@@ -35,7 +35,13 @@ class Shift:
 
     @classmethod
     def unserialize(cls, data: Dict):
-        return Shift(parser.parse(data["start"]), parser.parse(data["end"]), data["location_id"],
+        start = parser.parse(data["start"])
+        end = parser.parse(data["end"])
+
+        if end < start:
+            raise Exception("Invalid order, end should be after start")
+
+        return Shift(start, end, data["location_id"],
                      data["info"], data["entity_id"], data["shift_id"])
 
 
@@ -72,16 +78,44 @@ class ShiftManager:
         self.connection.commit()
         return modified_row_count
 
-    def get_shift_by_location_id(self, location_id: int = -1) -> List[Shift]:
-        if location_id == -1:
-            return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
-                          info=data[3], entity_id=data[4], location_id=data[5])
-                    for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
-                                                        "FROM shift")]
-        return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
-                      info=data[3], entity_id=data[4], location_id=data[5])
-                for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
-                                                    "FROM shift WHERE location_id=?", (location_id,))]
+    def get_shift_by_location_id(self, location_id: int = -1,
+                                 start: datetime = None, end: datetime = None, entity_id: int = -1) -> List[Shift]:
+
+        where_query_string = ""
+        query_data = ()
+        previous = False
+
+        if location_id != -1:
+            previous = True
+            where_query_string += " location_id=?"
+            query_data += (location_id,)
+
+        if entity_id != -1:
+            if previous:
+                where_query_string += " AND"
+            previous = True
+            where_query_string += " entity_id=?"
+            query_data += (entity_id,)
+
+        if start is not None:
+            if previous:
+                where_query_string += " AND"
+            previous = True
+            where_query_string += " start >= datetime(?)"
+            query_data += (start.isoformat(),)
+
+        if end is not None:
+            if previous:
+                where_query_string += " AND"
+            where_query_string += " start <= datetime(?)"
+            query_data += (end.isoformat(),)
+
+        if where_query_string != "":
+            where_query_string = " WHERE" + where_query_string
+
+        return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]), info=data[3],
+                      entity_id=data[4], location_id=data[5]) for data in self.connection.execute(
+            f"SELECT id, start, end, info, entity_id, location_id FROM shift {where_query_string};", query_data)]
 
     def get_shift_by_entity_id(self, entity_id: int) -> List[Shift]:
         return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
@@ -89,7 +123,7 @@ class ShiftManager:
                 for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
                                                     "FROM shift WHERE entity_id=?", (entity_id,))]
 
-    def add_shift_from_sample(self, week: List[List[Shift]], end: datetime):
+    def add_shift_from_sample(self, week: List[List[Shift]], end: datetime) -> int:
         for day in week:
             day.sort()
 
@@ -99,6 +133,11 @@ class ShiftManager:
         # Put the template in the shift list
         for day in week:
             for shift in day:
+                if shift.entity_id != -1:
+                    if not self.validate_entity_id(shift.entity_id):
+                        return -1
+                if not self.validate_location_id(shift.location_id):
+                    return -1
                 shifts.append(copy.deepcopy(shift))
 
         """
@@ -155,6 +194,9 @@ class ShiftManager:
 
         current_datetime = start
 
+        if not self.validate_location_id(location_id):
+            return -1
+
         while current_datetime <= end:
             end_shift = current_datetime + shift_length
 
@@ -173,7 +215,7 @@ class ShiftManager:
         return count
 
     def get_total_shift_count_by_location_id(self, location_id: int) -> int:
-        count = self.connection.execute("SELECT COUNT(*) FROM shift WHERE location_id=?", (location_id,)).fetchone()
+        count = self.connection.execute("SELECT COUNT(*) FROM shift WHERE location_id=?;", (location_id,)).fetchone()
 
         if count is None:
             return 0
@@ -193,4 +235,11 @@ class ShiftManager:
         return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
                       info=data[3], entity_id=data[4], location_id=data[5])
                 for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
-                                                    "FROM shift WHERE location_id=? AND NOT entity_id=-1;", (location_id,))]
+                                                    "FROM shift WHERE location_id=? AND NOT entity_id=-1;",
+                                                    (location_id,))]
+
+    def validate_location_id(self, location_id: int) -> bool:
+        return self.connection.execute("SELECT id FROM location WHERE id=?;", (location_id,)).fetchone() is not None
+
+    def validate_entity_id(self, entity_id: int) -> bool:
+        return self.connection.execute("SELECT id FROM entity WHERE id=?;", (entity_id,)).fetchone() is not None

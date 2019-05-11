@@ -54,6 +54,7 @@
           $('#end_time')[0].value = info.event.end.toISOString().substring(0, 16);
           $('#employee')[0].placeholder = info.event.title;
           $('#submit')[0].setAttribute('onclick', 'submitEdit(this.form);');
+          $('.modal-title')[0].innerHTML = 'Edit Shift'
           $('.modal').modal();
         },
         dateClick: function(info) {
@@ -61,6 +62,8 @@
           $('#end_time')[0].value = info.dateStr + "T15:00";
           $('#employee')[0].placeholder = 'Employee';
           $('#submit')[0].setAttribute('onclick', 'submitNew(this.form);');
+          $('#delete')[0].setAttribute('hidden', '');
+          $('.modal-title')[0].innerHTML = 'Add Shift'
           $('.modal').modal();
         },
         header: {
@@ -83,6 +86,13 @@
     </script>
     <script>
       function submitNew(form) {
+        for (var i=0, element; element = form.elements[i]; i++) {
+          console.log(element.value);
+        }
+      };
+    </script>
+    <script>
+      function deleteShift(form) {
         for (var i=0, element; element = form.elements[i]; i++) {
           console.log(element.value);
         }
@@ -117,6 +127,7 @@
               <input type="text" class="form-control" id="employee">
             </div>
             <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit">Submit changes</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal" id="delete" onClick="deleteShift(this.form);">Delete Shift</button>
           </form>
         </div>
       </div>

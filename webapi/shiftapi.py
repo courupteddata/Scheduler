@@ -32,7 +32,7 @@ def shift_get():
         return jsonify({"shift": [item.serialize() for item in
                        shared_shift_manager.get_shift_by_location_id(location_id, start, end, entity_id)]})
 
-    data = "\"Subject\",\"Start Date\",\"Start Time\",\"End Date\",\"End Time\",\"Description\",\"Location\"\n"
+    data = "\"Subject\",\"Start Date\",\"Start Time\",\"End Date\",\"End Time\",\"Description\",\"Location\"\r\n"
     shifts = shared_shift_manager.get_shift_by_location_id(location_id, start, end, entity_id)
 
     empty = "Empty"
@@ -46,7 +46,7 @@ def shift_get():
 
         data += f"\"{shared_shift_manager.get_entity_name(shift.entity_id) if shift.entity_id != -1 else empty}\"," \
             f"\"{start_date}\",\"{start_time}\",\"{end_date}\",\"{end_time}\",\"{shift.info}\"," \
-            f"\"{shared_shift_manager.get_location_label(shift.location_id)}\"\n"
+            f"\"{shared_shift_manager.get_location_label(shift.location_id)}\"\r\n"
 
     output = make_response(data)
     output.headers["Content-Disposition"] = "attachment; filename=export.csv"

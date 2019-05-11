@@ -56,7 +56,7 @@ def shift_add():
     if "entity_id" not in data:
         data["entity_id"] = -1
     else:
-        if not shared_shift_manager.validate_entity_id(data["entity_id"]):
+        if data["entity_id"] != -1 and not shared_shift_manager.validate_entity_id(data["entity_id"]):
             error_msg += "invalid entity_id.  "
 
     if error_msg != "":
@@ -140,3 +140,8 @@ def shift_add_repeat():
 
     return jsonify({"shifts_added": shared_shift_manager.add_from_shift_length(
         timedelta(hours=data["shift_length"]), start, end, data["location_id"], data["info"])})
+
+
+@shift_api.route("/shift/<int:shift_id>", methods=['DELETE'])
+def shift_delete(shift_id: int):
+    return jsonify({"shift_deleted": shared_shift_manager.delete_shift(shift_id) > 0})

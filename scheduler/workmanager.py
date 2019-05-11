@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Union, Dict
 from . import shared
 
 
@@ -25,6 +25,13 @@ class WorkManager:
             return []
 
         return [(entry[0], entry[1], entry[2]) for entry in data]
+
+    def get_single_work(self, work_id: int) -> Union[None, Dict]:
+        data = self.connection.execute("SELECT id, progress, message FROM work WHERE id=?", (work_id,)).fetchone()
+
+        if data is None:
+            return None
+        return {"work_id": data[0], "work_progress": data[1], "work_message": data[2]}
 
     def delete_all_entry(self) -> int:
         modified_rows = self.connection.execute("DELETE FROM work;").rowcount

@@ -108,4 +108,5 @@ class Scheduler:
 
         Thread(target=self.fill_list_of_schedules, args=(self, work)).start()
 
+        #  Returns list of (location_id, work_id)
         return work

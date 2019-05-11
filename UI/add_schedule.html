@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+  <title>Add Schedule</title>
+</head>
+<body>
+  <h3>Add Schedule</h3>
+  <form>
+    <div class="form-group">
+      <label for="start">Start Date:</label>
+      <input type="date" class="form-control" id="start">
+    </div>
+    <div class="form-group">
+      <label for="end">End Date:</label>
+      <input type="date" class="form-control" id="end">
+    </div>
+    <div class="custom-control custom-checkbox">
+      <input type="checkbox" class="custom-control-input" id="repeat">
+      <label class="custom-control-label" for="repeat">Repeat?</label>
+    </div>
+  </form>
+  <button class="btn btn-primary" onClick="addShift(1);" id="add_shift">Add New Shift</button>
+
+  <a href="home.html">Home</a>
+
+  <script>
+    function addShift(num) {
+      document.getElementsByTagName('form')[0].innerHTML += `
+      <form>
+        <div class="form-group">
+          <label for="start_time">Shift ` + num + ` Start:</label>
+          <input type="datetime-local" class="form-control" id="start_time` + num + `">
+        </div>
+        <div class="form-group">
+          <label for="end_time">Shift ` + num + ` End:</label>
+          <input type="datetime-local" class="form-control" id="end_time` + num + `">
+        </div>
+      `;
+      $('#add_shift')[0].setAttribute('onclick', 'addShift(' + (num + 1) + ');');
+    };
+  </script>
+
+</body>
+</html>

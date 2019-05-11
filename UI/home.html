@@ -6,6 +6,10 @@
 
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
   <title>Hopkins Scheduler</title>
 </head>
 <body>
@@ -27,8 +31,6 @@
         <thead>
           <tr>
             <th scope="col">Name</th>
-            <th scope="col">Type</th>
-            <th scope="col">Constraints</th>
             <th scope="col">Edit?</th>
           </tr>
         </thead>
@@ -45,8 +47,8 @@
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Dates</th>
             <th scope="col">Location</th>
+            <th scope="col">Dates</th>
             <th scope="col">View</th>
             <th scope="col">Export to .csv</th>
           </tr>
@@ -54,55 +56,37 @@
         <tbody>
         </tbody>
       </table>
+      <div class="container-fluid">
+        <a href="add_schedule.html">
+          <button class="btn btn-primary">Add New Schedule</button>
+        </a>
+      </div>
     </div>
   </div>
 
   <script>
-    // replace this bit with actually fetching/formatting the data
-    var data =
-    {
-      "employees":[
-        {"id":"0", "name":"Jac Chalker", "type":"Doctor", "constraints":[{"label":"Can't work Saturdays"}]},
-        {"id":"1", "name":"Alex Whitehead", "type":"PA", "constraints":[{"label":"Prefers evening shifts"}]},
-        {"id":"2", "name":"Levan Sulimanov", "type":"Doctor", "constraints":[{"label":"On vacation 4/16-4/21"}]},
-        {"id":"3", "name":"Nathan Jones", "type":"PA", "constraints":[]},
-        {"id":"4", "name":"Yajan Khanal", "type":"Doctor", "constraints":[]}
-      ]
-    };
-    var output = "";
-    data.employees.forEach(function(employee) {
-      output += "<tr><td scope=\"row\">" + employee.name + "</td><td>" + employee.type + "</td><td>";
-      employee.constraints.forEach(function(constraint) {
-        output += constraint.label;
+    jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
+      var output = "";
+      data.entity.forEach(function(employee) {
+        output += "<tr><td scope=\"row\">" + employee.entity_name + "</td><td><a href=\"edit_employee.html?id=" + employee.entity_id + "\">Edit</td></tr>";
       });
-      output += "</td><td>" + "<a href=\"edit_employee.html?id=" + employee.id + "\">Edit</td></tr>";
+      document.getElementsByTagName("tbody")[0].innerHTML = output;
     });
-    document.getElementsByTagName("tbody")[0].innerHTML = output;
   </script>
 
   <script>
-    // replace this bit with actually fetching/formatting the data
-    var data =
-    {
-      "schedules":[
-        {"id":"0", "date_start":"04/17/19", "date_end":"04/17/20", "location":"Emergency Room"},
-        {"id":"1", "date_start":"04/17/20", "date_end":"04/17/21", "location":"Emergency Room"},
-        {"id":"2", "date_start":"04/17/21", "date_end":"04/17/22", "location":"Emergency Room"},
-        {"id":"3", "date_start":"04/17/22", "date_end":"04/17/23", "location":"Emergency Room"},
-        {"id":"4", "date_start":"04/17/23", "date_end":"04/17/24", "location":"Emergency Room"}
-      ]
-    };
-    var output = "";
-    data.schedules.forEach(function(schedule) {
-      output += "<tr><td scope=\"row\">" + schedule.date_start + " - " + schedule.date_end + "</td><td>" +
-       schedule.location + "</td><td>" + "<a href=\"view_schedule.html?id=" + schedule.id + "\">View</td>" +
-       "<td><a href=\"export_schedule.html?id=" + schedule.id + "\">Export</td></tr>";
-    });
-    document.getElementsByTagName("tbody")[1].innerHTML = output;
-  </script>
+    jQuery.get("http://127.0.0.1:5000/api/v1/location", function( locations ) {
+      var output = "";
+      locations.location.forEach(function(location) {
+        output += "<tr><td>" + location.location_label + "</td>"
+        output += "<td scope=\"row\"><div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>"
+        output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"date\" class=\"form-control\" id=\"end\"></div></td>"
+        output += "<td><a href=\"view_schedule.html?location_id=" + location.location_id + "\">View</td>"
+        output += "<td><a onClick=\"export(location.location_id)\">Export</td></tr>";
+      });
 
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+      document.getElementsByTagName("tbody")[1].innerHTML = output;
+    });
+  </script>
 </body>
 </html>

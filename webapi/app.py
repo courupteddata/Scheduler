@@ -1,9 +1,11 @@
 from flask import Flask
-from webapi import entityapi
+from webapi import entityapi, locationapi
 
 app = Flask(__name__)
 API_PREFIX = "/api/v1"
 app.register_blueprint(entityapi.entity_api, url_prefix=API_PREFIX)
+app.register_blueprint(locationapi.location_api, url_prefix=API_PREFIX)
+
 
 # look into https://www.getpostman.com/postman
 @app.before_first_request

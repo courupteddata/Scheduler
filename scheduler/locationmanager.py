@@ -83,6 +83,28 @@ class LocationManager:
         location_is_list = isinstance(location_id, list)
         entity_is_list = isinstance(entity_id, list)
 
+        if location_is_list:
+            valid_location_test = self.connection.executemany("SELECT id FROM location WHERE id=?;",
+                                                              [(temp,) for temp in location_id]).fetchall()
+            if len(valid_location_test) != len(location_id):
+                return 0
+        else:
+            valid_location_test = self.connection.execute("SELECT id FROM location WHERE id=?;",
+                                                          (location_id,)).fetchone()
+            if valid_location_test is None:
+                return 0
+
+        if entity_is_list:
+            valid_entity_test = self.connection.executemany("SELECT id FROM entity WHERE id=?;",
+                                                            [(temp,) for temp in entity_id]).fetchall()
+            if len(valid_entity_test) != len(entity_id):
+                return 0
+        else:
+            valid_entity_test = self.connection.execute("SELECT id FROM entity WHERE id=?;",
+                                                        (entity_id,)).fetchone()
+            if valid_entity_test is None:
+                return 0
+
         modified_list = []
         if entity_is_list:
             for ent_id in entity_id:

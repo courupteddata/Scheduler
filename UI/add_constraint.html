@@ -47,31 +47,32 @@
     var output = "";
     switch(type) {
       case "Day of Week":
-        output += "<div class=\"form-group\"><label for=\"date\">Day of Week</label><input type=\"text\" class=\"form-control\" id=\"date\"></div>";
+        output += "<div class=\"form-group\"><label for=\"date\">Day of Week</label><select class=\"form-control\"id=\"date\">"
+        output += "<option value=\"0\">Monday</option><option value=\"1\">Tuesday</option><option value=\"2\">Wednesday</option>"
+        output += "<option value=\"3\">Thursday</option><option value=\"4\">Friday</option><option value=\"5\">Saturday</option><option value=\"6\">Sunday</option></select></div>";
         break;
       case "Date Range":
-        output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"text\" class=\"form-control\" id=\"start\"></div>";
-        output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"text\" class=\"form-control\" id=\"end\"></div>";
+        output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>";
+        output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"date\" class=\"form-control\" id=\"end\"></div>";
         break;
       case "Time Range":
-        output += "<div class=\"form-group\"><label for=\"start\">Start Time</label><input type=\"text\" class=\"form-control\" id=\"start\"></div>";
-        output += "<div class=\"form-group\"><label for=\"end\">End Time</label><input type=\"text\" class=\"form-control\" id=\"end\"></div>";
+        output += "<div class=\"form-group\"><label for=\"start\">Start Time</label><input type=\"time\" class=\"form-control\" id=\"start\"></div>";
+        output += "<div class=\"form-group\"><label for=\"end\">End Time</label><input type=\"time\" class=\"form-control\" id=\"end\"></div>";
         break;
       case "Relative (After)":
         output += "<div class=\"form-group\"><label for=\"delta\">Minimum Distance</label><input type=\"text\" class=\"form-control\" id=\"delta\"></div>";
         break;
       case "Relative (During)":
-        // I might be misunderstand what Nathan meant by applies during timedelta when I say Max Distance
         output += "<div class=\"form-group\"><label for=\"delta\">Maximum Distance</label><input type=\"text\" class=\"form-control\" id=\"delta\"></div>";
         break;
       case "Total (Fixed)":
-        output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"text\" class=\"form-control\" id=\"start\"></div>";
-        output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"text\" class=\"form-control\" id=\"end\"></div>";
+        output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>";
+        output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"date\" class=\"form-control\" id=\"end\"></div>";
         output += "<div class=\"form-group\"><label for=\"total\">Total Hours</label><input type=\"text\" class=\"form-control\" id=\"total\"></div>";
         break;
       case "Total (Rolling)":
-        output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"text\" class=\"form-control\" id=\"start\"></div>";
-        output += "<div class=\"form-group\"><label for=\"length\">Time Period</label><input type=\"text\" class=\"form-control\" id=\"length\"></div>";
+        output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>";
+        output += "<div class=\"form-group\"><label for=\"length\">Time Period</label><input type=\"date\" class=\"form-control\" id=\"length\"></div>";
         output += "<div class=\"form-group\"><label for=\"total\">Total</label><input type=\"text\" class=\"form-control\" id=\"total\"></div>";
     }
     document.getElementById("fields").innerHTML = output;
@@ -80,8 +81,39 @@
 
   <script>
     function processFormResults(form) {
-      for (var i=0, element; element = form.elements[i]; i++) {
-        console.log(element.value);
+      var employee_id = window.location.search.split("=")[1];
+      switch(form.elements[2].value) {
+        case "Day of Week":
+        $.ajax({
+            url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+            type: 'POST',
+            data: {
+              'requirement_type':'TIMEFRAME', 'data':{
+                'cost':parseInt(form.elements[1].value),
+                'label':form.elements[0].value,
+                "time_frame_type": "DAY_OF_WEEK",
+                'DAY_OF_WEEK':parseInt(form.elements[3].value)
+                }
+              }
+          });
+          break;
+        case "Date Range":
+
+          break;
+        case "Time Range":
+
+          break;
+        case "Relative (After)":
+
+          break;
+        case "Relative (During)":
+
+          break;
+        case "Total (Fixed)":
+
+          break;
+        case "Total (Rolling)":
+
       }
     };
   </script>

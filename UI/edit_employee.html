@@ -19,14 +19,7 @@
       <label for="name">Name</label>
       <input type="text" class="form-control" id="name">
     </div>
-    <div class="form-group">
-      <label for="employee_type">Type</label>
-      <select class="form-control" id="employee_type">
-        <option>Doctor</option>
-        <option>PA</option>
-      </select>
-    </div>
-    <button type="button" class="btn btn-primary" onClick="processFormResults(this.form);">Submit</button>
+    <button type="button" class="btn btn-primary" onClick="processFormResults(this.form);">Change Name</button>
   </form>
   <h3>Constraints</h3>
   <table class="table">
@@ -46,55 +39,32 @@
 
 
   <script>
-    // use employee_id to fetch real data
     var employee_id = window.location.search.split("=")[1];
-    var employee = {"id":0, "name":"Jac Chalker", "type":"PA", "constraints":[
-      {
-        "id":0, "label":"Can't work Saturdays", "type":"Day of Week", "cost":1.43,
-        "day_of_week":{"year":2019, "month":4, "day":20}
-      },
-      {
-        "id":1, "label":"Can't work 4/20-4/26", "type":"Date Range", "cost":2.7,
-        "start":{"year":2019, "month":4, "day":20},
-        "end":{"year":2019, "month":4, "day":26}
-      },
-      {
-        "id":2, "label":"Can't work nights", "type":"Time Range", "cost":6.2,
-        "start":{"hour":18},
-        "end":{"hour":24}
-      },
-      {
-        "id":3, "label":"Must have a day between shifts", "type":"Relative (After)", "cost":4.1,
-        "distance":{"days":1}
-      },
-      {
-        "id":4, "label":"Must work 40 hours a week", "type":"Total (Rolling)", "cost":7, "total":40,
-        "start":{"year":2019, "month":4, "day":20},
-        "length":{"days":7}
-      },
-      {
-        "id":5, "label":"Must work 40 hours 4/20-4/26", "type":"Total (Fixed)", "cost":8.2, "total":40,
-        "start":{"year":2019, "month":4, "day":20},
-        "end":{"year":2019, "month":4, "day":26}
+    $('#add_link')[0].setAttribute('href', 'add_constraint.html?id=' + employee_id);
+    jQuery.get("http://127.0.0.1:5000/api/v1/entity/" + employee_id, function( employee ) {
+      var output = "";
+      document.getElementById("name").value = employee.entity_name;
+      employee.entity_requirement.forEach(function(constraint) {
+        output += "<tr><td>" + constraint.requirement_data.label + "</td><td><a href=\"edit_constraint.html?id=" + constraint.requirement_id + "\">Edit</td></tr>";
+      });
+      if(employee.entity_requirement.length == 0) {
+        output += "<tr><td>No Constraints</td></tr>"
       }
-    ]};
-
-    document.getElementById("name").value = employee.name;
-    document.getElementById("employee_type").value = employee.type;
-    document.getElementById("add_link").setAttribute("href", "add_constraint.html");
-
-    var output = "";
-    employee.constraints.forEach(function(constraint) {
-        output += "<tr><td>" + constraint.label + "</td><td>" + "<a href=\"edit_constraint.html?id=" + constraint.id + "\">Edit</td></tr>";;
+      document.getElementsByTagName("tbody")[0].innerHTML = output;
     });
-    document.getElementsByTagName("tbody")[0].innerHTML = output;
   </script>
 
   <script>
     function processFormResults(form) {
-      for (var i=0, element; element = form.elements[i]; i++) {
-        console.log(element.value);
-      }
+      var employee_id = window.location.search.split("=")[1];
+      var request = $.ajax({
+          url: "http://127.0.0.1:5000/api/v1/entity/" + employee_id,
+          type: "PUT",
+          data: JSON.stringify({ "entity_id":parseInt(employee_id), "entity_name":form.elements[0].value }),
+          dataType: 'application/json'
+        });
+        console.log(request);
+        console.log(form.elements[0].value);
     };
   </script>
 </body>

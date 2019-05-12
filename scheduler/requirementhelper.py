@@ -28,22 +28,27 @@ def rebuild_requirement_from_requirement_id(requirement_id: int,
     req_type = data[0]
     data = data[1]
 
-    return rebuild_from_data(req_type, data)
+    return rebuild_from_data(req_type, data, requirement_id)
 
 
-def rebuild_from_data(req_type: str, json_data: str) -> Union['entityrequirement.EntityRequirement', None]:
+def rebuild_from_data(req_type: str, json_data: str, requirement_id: int = -1) -> Union['entityrequirement.EntityRequirement', None]:
     data = json.loads(json_data)
 
-    if req_type == RequirementType.BASE.name:
-        return entityrequirement.EntityRequirement.unserialize(data)
-    elif req_type == RequirementType.TIMEFRAME.name:
-        return entityrequirement.TimeFrameRequirement.unserialize(data)
-    elif req_type == RequirementType.TOTALS.name:
-        return entityrequirement.TotalsRequirement.unserialize(data)
-    elif req_type == RequirementType.RELATIVE.name:
-        return entityrequirement.RelativeRequirement.unserialize(data)
+    created_requirement = None
 
-    return None
+    if req_type == RequirementType.BASE.name:
+        created_requirement = entityrequirement.EntityRequirement.unserialize(data)
+    elif req_type == RequirementType.TIMEFRAME.name:
+        created_requirement = entityrequirement.TimeFrameRequirement.unserialize(data)
+    elif req_type == RequirementType.TOTALS.name:
+        created_requirement = entityrequirement.TotalsRequirement.unserialize(data)
+    elif req_type == RequirementType.RELATIVE.name:
+        created_requirement = entityrequirement.RelativeRequirement.unserialize(data)
+
+    if created_requirement is not None:
+        created_requirement.requirement_id = requirement_id
+
+    return created_requirement
 
 
 def store_requirement(db_connection: 'sqlite3.Connection',

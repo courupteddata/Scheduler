@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-
+from dateutil import parser
 from scheduler import entitymanager, entityrequirement, requirementhelper
 
 entity_api = Blueprint('entity_api', __name__)
@@ -35,6 +35,26 @@ def entity_id_get(entity_id: int):
         to_return["entity_requirement"].append(req.serialize())
 
     return jsonify(to_return)
+
+
+@entity_api.route("/entity/<int:entity_id>/stats", methods=['GET'])
+def entity_id_get_stats(entity_id: int):
+    start = request.args.get('start', type=str, default=None)
+    end = request.args.get('end', type=str, default=None)
+
+    if start is not None:
+        try:
+            start = parser.parse(start)
+        except Exception as e:
+            return jsonify({"error": f"invalid start. {str(e)}"}), 400
+
+    if end is not None:
+        try:
+            end = parser.parse(end)
+        except Exception as e:
+            return jsonify({"error": f"invalid end. {str(e)}"}), 400
+
+    return jsonify({"entity_id": entity_id, "stats": shared_entity_manager.get_stats_for_entity(entity_id, start, end)})
 
 
 @entity_api.route("/entity/<int:entity_id>", methods=['PUT'])

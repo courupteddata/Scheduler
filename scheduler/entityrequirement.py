@@ -55,10 +55,11 @@ TotalsRequirement:
 
 
 class EntityRequirement:
-    def __init__(self, label: str, cost: float, is_relative: bool = False):
+    def __init__(self, label: str, cost: float, is_relative: bool = False, requirement_id: int = -1):
         self.label = label
         self._cost = cost
         self.is_relative = is_relative
+        self.requirement_id = requirement_id
 
     def applies(self, entity_state: 'entitystate.EntityState', shift_start: datetime, shift_end: datetime) -> bool:
         return True
@@ -72,7 +73,9 @@ class EntityRequirement:
         self._cost = cost
 
     def serialize(self) -> dict:
-        return {"label": self.label, "cost": self._cost, "is_relative": self.is_relative}
+        return {"label": self.label, "cost": self._cost,
+                "is_relative": self.is_relative,
+                "requirement_id": self.requirement_id}
 
     @classmethod
     def unserialize(cls, data: dict):
@@ -105,7 +108,8 @@ class TimeFrameRequirement(EntityRequirement):
         data = {"label": self.label,
                 "cost": self.cost,
                 "time_frame_type": self._time_frame_type.name,
-                "is_relative": self.is_relative}
+                "is_relative": self.is_relative,
+                "requirement_id": self.requirement_id}
 
         if self._time_frame_type is TimeFrameRequirement.Types.DAY_OF_WEEK:
             data["day_of_week"] = self._day_of_week
@@ -224,7 +228,8 @@ class RelativeRequirement(EntityRequirement):
                 "is_relative": self.is_relative,
                 "during": self._during,
                 "after": self._after,
-                "distance": self._distance}
+                "distance": self._distance,
+                "requirement_id": self.requirement_id}
 
     @classmethod
     def unserialize(cls, data: dict):
@@ -305,7 +310,8 @@ class TotalsRequirement(EntityRequirement):
                 "scale": self._scale,
                 "start": self._start.isoformat(),
                 "length": self._length.total_seconds()/3600.0,
-                "end": self._end.isoformat()}
+                "end": self._end.isoformat(),
+                "requirement_id": self.requirement_id}
 
     @classmethod
     def unserialize(cls, data: dict):

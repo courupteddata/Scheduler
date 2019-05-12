@@ -6,6 +6,10 @@
 
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
   <title>Edit Constraint</title>
 </head>
 <body>
@@ -37,6 +41,44 @@
     var employee_id = window.location.search.match(/employee_id=[^&]*/)[0].substr(12);
     var constraint_id = window.location.search.match(/constraint_id=[^&]*/)[0].substr(14);
     //use constraint_id to fetch real constraint
+    jQuery.get("http://127.0.0.1:5000/api/v1/entity/requirement/" + constraint_id, function( data ) {
+      console.log(data);
+      switch(data.requirement_type) {
+        case "TIMEFRAME":
+          switch(data.requirement_data.time_frame_type) {
+            case "DATE_RANGE":
+              addFields("Date Range");
+              document.getElementById("constraint_type").value = "Date Range"
+              break;
+            case "TIME_RANGE":
+              addFields("Time Range");
+              document.getElementById("constraint_type").value = "Time Range"
+              break;
+            case "DAY_OF_WEEK":
+              addFields("Day of Week");
+              document.getElementById("constraint_type").value = "Day of Week"
+          }
+          break;
+        case "RELATIVE":
+          if(data.requirement_data.during) {
+            addFields("Relative (During)");
+            document.getElementById("constraint_type").value = "Relative (During)"
+          } else {
+            addFields("Relative (After)");
+            document.getElementById("constraint_type").value = "Relative (After)"
+          }
+          break;
+        case "TOTALS":
+          if(data.requirement_data.is_rolling) {
+            addFields("Total (Rolling)");
+            document.getElementById("constraint_type").value = "Total (Rolling)"
+          } else {
+            addFields("Total (Fixed)");
+            document.getElementById("constraint_type").value = "Total (Fixed)"
+          }
+      }
+      document.getElementById("label").value = data.requirement_data.label;
+    });
     var constraint = {
         "id":0, "label":"Can't work Saturdays", "type":"Day of Week", "cost":1.43,
         "day_of_week":{"year":2019, "month":4, "day":20}
@@ -59,7 +101,6 @@
           output += "<div class=\"form-group\"><label for=\"delta\">Minimum Distance</label><input type=\"text\" class=\"form-control\" id=\"delta\"></div>";
           break;
         case "Relative (During)":
-          // I might be misunderstand what Nathan meant by applies during timedelta when I say Max Distance
           output += "<div class=\"form-group\"><label for=\"delta\">Maximum Distance</label><input type=\"text\" class=\"form-control\" id=\"delta\"></div>";
           break;
         case "Total (Fixed)":
@@ -74,9 +115,6 @@
       }
       document.getElementById("fields").innerHTML = output;
     }
-    addFields(constraint.type);
-    document.getElementById("label").value = constraint.label;
-    document.getElementById("constraint_type").value = constraint.type;
   </script>
 
   <script>
@@ -86,9 +124,5 @@
       }
     };
   </script>
-
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </body>
 </html>

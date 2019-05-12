@@ -84,7 +84,7 @@
         output += "<div class=\"form-group\"><label for=\"end" + location.location_id + "\">End Date</label>"
         output += "<input type=\"date\" class=\"form-control\" id=\"end" + location.location_id + "\" max=\"9999-12-31\" onChange=\"setEnd(this.value, " + location.location_id + ");\"></div></td>"
         output += "<td><a href=\"view_schedule.html?id=" + location.location_id + "\" id=\"link" + location.location_id + "\">View</td>"
-        output += "<td><a onClick=\"export(" + location.location_id + ")\">Export</td></tr>";
+        output += "<td><button class=\"btn btn-primary\" onClick=\"exportThis(" + location.location_id + ")\">Export</button></td></tr>";
       });
 
       document.getElementsByTagName("tbody")[1].innerHTML = output;
@@ -99,6 +99,25 @@
     function setEnd(date, id) {
       document.getElementById('link' + id).href = document.getElementById('link' + id).href.replace(/&end=[^&]*/g, "");
       document.getElementById('link' + id).href += "&end=" + date;
+    }
+    function exportThis(id) {
+      var start = document.getElementById('link' + id).href.match(/start=[^&]*/)[0].substr(6);
+      var end = document.getElementById('link' + id).href.match(/end=[^&]*/)[0].substr(4);
+
+      $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/shift',
+        type: 'GET',
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify({
+          "start":start,
+          "end":end,
+          "export":true,
+          "location_id":id
+        }),
+        success: function(data) {
+          console.log(data);
+        }
+      });
     }
   </script>
 </body>

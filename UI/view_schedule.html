@@ -34,8 +34,7 @@
               "entity_id":form.elements[2].value
             }),
             success: function( data ) {
-              alert("Shift Edited (Please refresh to view)");
-              //should find some way to call calendar.render
+              location.reload();
             }
           });
         }
@@ -55,8 +54,7 @@
           "entity_id":form.elements[2].value
         }),
         success: function( data ) {
-          alert("Shift Added (Please refresh to view)");
-          //should find some way to call calendar.render
+          location.reload();
         }
       });
     };
@@ -67,8 +65,7 @@
         url: 'http://127.0.0.1:5000/api/v1/shift/' + form.elements[3].value,
         type: 'DELETE',
         success: function( data ) {
-          alert("Shift Deleted (Please refresh to view)");
-          //should find some way to call calendar.render
+          location.reload();
         }
       });
     };
@@ -93,112 +90,208 @@
         success: function( shifts ) {
           data = shifts.shift;
           var events = [];
+          var length = data.length;
           data.forEach(function(shift) {
             var employee_name;
             $.ajax({
               url: 'http://127.0.0.1:5000/api/v1/entity/' + shift.entity_id,
               type: 'GET',
+              error: function( ) {
+                events.push({
+                  title: "Unassigned",
+                  start: shift.start,
+                  end: shift.end,
+                  id: shift.shift_id
+                });
+                if(events.length == length) {
+                  var calendar = new FullCalendar.Calendar(calendarEl, {
+                    plugins: ['dayGrid', 'interaction'],
+                    defaultView: 'dayGridMonth',
+                    editable: true,
+                    currentTimezone: 'local',
+                    eventDrop: function(info) {
+                      if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
+                        info.revert();
+                      } else {
+                        var employee_id;
+                        $.ajax({
+                          url: 'http://127.0.0.1:5000/api/v1/entity',
+                          type: 'GET',
+                          success: function( employees ) {
+                            employees.entity.forEach(function(employee) {
+                             if(info.event.title == employee.entity_name) {
+                               employee_id = employee.entity_id
+                             }
+                           });
+                           $.ajax({
+                             url: 'http://127.0.0.1:5000/api/v1/shift/' + info.event.id,
+                             type: 'DELETE',
+                             success: function( data ) {
+                               $.ajax({
+                                 url: 'http://127.0.0.1:5000/api/v1/shift',
+                                 type: 'POST',
+                                 contentType: 'application/json;charset=UTF-8',
+                                 data: JSON.stringify({
+                                   "start":info.event.start,
+                                   "end":info.event.end,
+                                   "location_id":window.location.search.match(/id=[^&]*/)[0].substr(3),
+                                   "entity_id":employee_id
+                                 })
+                               });
+                             }
+                           });
+                          }
+                        });
+                      }
+                    },
+                    eventClick: function(info) {
+                      var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+                      var start = (new Date(info.event.start - tzoffset)).toISOString().slice(0, 19)
+                      var end = (new Date(info.event.end - tzoffset)).toISOString().slice(0, 19)
+                      $('#start_time')[0].value = start;
+                      $('#end_time')[0].value = end;
+                      jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
+                        data.entity.forEach(function(employee) {
+                          opt = document.createElement('option');
+                          opt.appendChild( document.createTextNode(employee.entity_name) );
+                          opt.value = employee.entity_id;
+                          document.getElementById("employee").appendChild(opt);
+                        });
+                      });
+                      $('#shift_id')[0].value = info.event.id;
+                      $('#submit')[0].setAttribute('onclick', 'submitEdit(this.form);');
+                      $('#delete')[0].removeAttribute('hidden');
+                      $('.modal-title')[0].innerHTML = 'Edit Shift'
+                      $('.modal').modal();
+                    },
+                    dateClick: function(info) {
+                      $('#start_time')[0].value = info.dateStr + "T07:00";
+                      $('#end_time')[0].value = info.dateStr + "T15:00";
+                      jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
+                        data.entity.forEach(function(employee) {
+                          opt = document.createElement('option');
+                          opt.appendChild( document.createTextNode(employee.entity_name) );
+                          opt.value = employee.entity_id;
+                          document.getElementById("employee").appendChild(opt);
+                        });
+                      });
+                      $('#shift_id')[0].value = null;
+                      $('#submit')[0].setAttribute('onclick', 'submitNew(this.form);');
+                      $('#delete')[0].setAttribute('hidden', '');
+                      $('.modal-title')[0].innerHTML = 'Add Shift'
+                      $('.modal').modal();
+                    },
+                    header: {
+                      left: 'prev,next today',
+                      center: 'title',
+                    },
+                    events: events
+                  });
+
+                  calendar.render();
+                }
+              },
               success: function( employee ) {
                 employee_name = employee.entity_name;
+                events.push({
+                  title: employee_name,
+                  start: shift.start,
+                  end: shift.end,
+                  id: shift.shift_id
+                });
+                if(events.length == length) {
+                  var calendar = new FullCalendar.Calendar(calendarEl, {
+                    plugins: ['dayGrid', 'interaction'],
+                    defaultView: 'dayGridMonth',
+                    editable: true,
+                    currentTimezone: 'local',
+                    eventDrop: function(info) {
+                      if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
+                        info.revert();
+                      } else {
+                        var employee_id;
+                        $.ajax({
+                          url: 'http://127.0.0.1:5000/api/v1/entity',
+                          type: 'GET',
+                          success: function( employees ) {
+                            employees.entity.forEach(function(employee) {
+                             if(info.event.title == employee.entity_name) {
+                               employee_id = employee.entity_id
+                             }
+                           });
+                           $.ajax({
+                             url: 'http://127.0.0.1:5000/api/v1/shift/' + info.event.id,
+                             type: 'DELETE',
+                             success: function( data ) {
+                               $.ajax({
+                                 url: 'http://127.0.0.1:5000/api/v1/shift',
+                                 type: 'POST',
+                                 contentType: 'application/json;charset=UTF-8',
+                                 data: JSON.stringify({
+                                   "start":info.event.start,
+                                   "end":info.event.end,
+                                   "location_id":window.location.search.match(/id=[^&]*/)[0].substr(3),
+                                   "entity_id":employee_id
+                                 }),
+                                 success: function( data ) {
+                                   alert("Shift Edited (Please refresh to view)");
+                                 }
+                               });
+                             }
+                           });
+                          }
+                        });
+                      }
+                    },
+                    eventClick: function(info) {
+                      var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+                      var start = (new Date(info.event.start - tzoffset)).toISOString().slice(0, 19)
+                      var end = (new Date(info.event.end - tzoffset)).toISOString().slice(0, 19)
+                      $('#start_time')[0].value = start;
+                      $('#end_time')[0].value = end;
+                      jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
+                        data.entity.forEach(function(employee) {
+                          opt = document.createElement('option');
+                          opt.appendChild( document.createTextNode(employee.entity_name) );
+                          opt.value = employee.entity_id;
+                          document.getElementById("employee").appendChild(opt);
+                        });
+                      });
+                      $('#shift_id')[0].value = info.event.id;
+                      $('#submit')[0].setAttribute('onclick', 'submitEdit(this.form);');
+                      $('#delete')[0].removeAttribute('hidden');
+                      $('.modal-title')[0].innerHTML = 'Edit Shift'
+                      $('.modal').modal();
+                    },
+                    dateClick: function(info) {
+                      $('#start_time')[0].value = info.dateStr + "T07:00";
+                      $('#end_time')[0].value = info.dateStr + "T15:00";
+                      jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
+                        data.entity.forEach(function(employee) {
+                          opt = document.createElement('option');
+                          opt.appendChild( document.createTextNode(employee.entity_name) );
+                          opt.value = employee.entity_id;
+                          document.getElementById("employee").appendChild(opt);
+                        });
+                      });
+                      $('#shift_id')[0].value = null;
+                      $('#submit')[0].setAttribute('onclick', 'submitNew(this.form);');
+                      $('#delete')[0].setAttribute('hidden', '');
+                      $('.modal-title')[0].innerHTML = 'Add Shift'
+                      $('.modal').modal();
+                    },
+                    header: {
+                      left: 'prev,next today',
+                      center: 'title',
+                    },
+                    events: events
+                  });
+
+                  calendar.render();
+                }
               }
             });
-            events.push({
-              title: employee_name,
-              start: shift.start,
-              end: shift.end,
-              id: shift.shift_id
-            });
           });
-
-          var calendar = new FullCalendar.Calendar(calendarEl, {
-            plugins: ['dayGrid', 'interaction'],
-            defaultView: 'dayGridMonth',
-            editable: true,
-            currentTimezone: 'local',
-            eventDrop: function(info) {
-              if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
-                info.revert();
-              } else {
-                var employee_id;
-                $.ajax({
-                  url: 'http://127.0.0.1:5000/api/v1/entity',
-                  type: 'GET',
-                  success: function( employees ) {
-                    employees.entity.forEach(function(employee) {
-                     if(info.event.title == employee.entity_name) {
-                       employee_id = employee.entity_id
-                     }
-                   });
-                   $.ajax({
-                     url: 'http://127.0.0.1:5000/api/v1/shift/' + info.event.id,
-                     type: 'DELETE',
-                     success: function( data ) {
-                       $.ajax({
-                         url: 'http://127.0.0.1:5000/api/v1/shift',
-                         type: 'POST',
-                         contentType: 'application/json;charset=UTF-8',
-                         data: JSON.stringify({
-                           "start":info.event.start,
-                           "end":info.event.end,
-                           "location_id":window.location.search.match(/id=[^&]*/)[0].substr(3),
-                           "entity_id":employee_id
-                         }),
-                         success: function( data ) {
-                           alert("Shift Edited (Please refresh to view)");
-                           //should find some way to call calendar.render
-                         }
-                       });
-                     }
-                   });
-                  }
-                });
-              }
-            },
-            eventClick: function(info) {
-              var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
-              var start = (new Date(info.event.start - tzoffset)).toISOString().slice(0, 19)
-              var end = (new Date(info.event.end - tzoffset)).toISOString().slice(0, 19)
-              $('#start_time')[0].value = start;
-              $('#end_time')[0].value = end;
-              jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
-                data.entity.forEach(function(employee) {
-                  opt = document.createElement('option');
-                  opt.appendChild( document.createTextNode(employee.entity_name) );
-                  opt.value = employee.entity_id;
-                  document.getElementById("employee").appendChild(opt);
-                });
-              });
-              $('#shift_id')[0].value = info.event.id;
-              $('#submit')[0].setAttribute('onclick', 'submitEdit(this.form);');
-              $('#delete')[0].removeAttribute('hidden');
-              $('.modal-title')[0].innerHTML = 'Edit Shift'
-              $('.modal').modal();
-            },
-            dateClick: function(info) {
-              $('#start_time')[0].value = info.dateStr + "T07:00";
-              $('#end_time')[0].value = info.dateStr + "T15:00";
-              jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
-                data.entity.forEach(function(employee) {
-                  opt = document.createElement('option');
-                  opt.appendChild( document.createTextNode(employee.entity_name) );
-                  opt.value = employee.entity_id;
-                  document.getElementById("employee").appendChild(opt);
-                });
-              });
-              $('#shift_id')[0].value = null;
-              $('#submit')[0].setAttribute('onclick', 'submitNew(this.form);');
-              $('#delete')[0].setAttribute('hidden', '');
-              $('.modal-title')[0].innerHTML = 'Add Shift'
-              $('.modal').modal();
-            },
-            header: {
-              left: 'prev,next today',
-              center: 'title',
-            },
-            events: events
-          });
-
-          calendar.render();
         }
       });
     });

@@ -34,7 +34,8 @@
   <a href="home.html">Home</a>
 
   <script>
-    var constraint_id = window.location.search.split("=")[1];
+    var employee_id = window.location.search.match(/employee_id=[^&]*/)[0].substr(12);
+    var constraint_id = window.location.search.match(/constraint_id=[^&]*/)[0].substr(14);
     //use constraint_id to fetch real constraint
     var constraint = {
         "id":0, "label":"Can't work Saturdays", "type":"Day of Week", "cost":1.43,

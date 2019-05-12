@@ -27,6 +27,7 @@
       <tr>
         <th scope="col">Label</th>
         <th scope="col">Edit?</th>
+        <th scope="col">Delete?</th>
       </tr>
     </thead>
     <tbody>
@@ -45,7 +46,9 @@
       var output = "";
       document.getElementById("name").value = employee.entity_name;
       employee.entity_requirement.forEach(function(constraint) {
-        output += "<tr><td>" + constraint.label + "</td><td><a href=\"edit_constraint.html?id=" + constraint.requirement_id + "\">Edit</td></tr>";
+        console.log(constraint)
+        output += "<tr><td>" + constraint.label + "</td><td><a href=\"edit_constraint.html?constraint_id=" + constraint.requirement_id + "&employee_id=" + employee.entity_id + "\">Edit</td>"
+        output +="<td><a onClick=\"deleteConstraint(" + constraint.requirement_id + ")\">Delete</td></tr>";
       });
       if(employee.entity_requirement.length == 0) {
         output += "<tr><td>No Constraints</td></tr>"
@@ -55,6 +58,16 @@
   </script>
 
   <script>
+    function deleteConstraint(id) {
+      $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/entity/requirement/' + id,
+        type: 'DELETE',
+        success: function( data ) {
+          location.reload();
+        }
+      });
+    };
+
     function processFormResults(form) {
       var employee_id = window.location.search.split("=")[1];
       var request = $.ajax({

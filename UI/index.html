@@ -1,34 +1,56 @@
 <!doctype html>
 <html lang="en" xmlns="http://www.w3.org/1999/html">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <link rel="stylesheet" href="css/bootstrap-4.3.1.min.css">
-  <title>Hopkins Scheduler</title>
-</head>
-<body>
-  <div class="jumbotron text-center">
-    <h1>Hopkins Scheduler</h1>
-  </div>
-  <ul class="nav nav-tabs" id="tabs" role="tablist">
-    <li class="nav-item">
-      <a class="nav-link active" data-toggle="tab" href="#employees" role="tab" aria-controls="profile">Employees</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" data-toggle="tab" href="#shifts" role="tab" aria-controls="messages">Schedules</a>
-    </li>
-  </ul>
+    <link href='fullcalendar/core/main.css' rel='stylesheet' />
+    <link href='fullcalendar/daygrid/main.css' rel='stylesheet' />
 
-  <div class="tab-content">
-    <div id="employees"><div id="employee_view"></div></div>
-    <div id="shifts"><div id="shift_view"></div></div>
-  </div>
+    <script src='fullcalendar/core/main.js'></script>
+    <script src='fullcalendar/interaction/main.js'></script>
+    <script src='fullcalendar/daygrid/main.js'></script>
 
+    <link rel="stylesheet" href="css/bootstrap-4.3.1.min.css">
+    <script src="js/libs/jquery-3.4.1.min.js"></script>
+    <script src="js/libs/popper-1.14.7.min.js"></script>
+    <script src="js/libs/bootstrap-4.3.1.min.js"></script>
+    <script src="js/shift_view.js"></script>
+    <script src="js/location_view.js"></script>
+    <script src="js/main.js"></script>
 
-  <script src="js/libs/jquery-3.4.1.min.js"></script>
-  <script src="js/libs/popper-1.14.7.min.js"></script>
-  <script src="js/libs/bootstrap-4.3.1.min.js"></script>
-  <script src="js/main.js"></script>
-</body>
+    <title>Hopkins Scheduler</title>
+  </head>
+  <body>
+    <div class="jumbotron text-center">
+      <h1>Hopkins Scheduler</h1>
+    </div>
+    <div class="container">
+      <ul class="nav nav-tabs" id="tabs" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active" data-toggle="tab" href="#shift_view" role="tab" aria-controls="messages">Shifts</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-toggle="tab" href="#employee_view" role="tab" aria-controls="profile">Employees</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-toggle="tab" href="#location_view" role="tab" aria-controls="profile">Locations</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-toggle="tab" href="#stats_view" role="tab" aria-controls="profile">Statistics</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-toggle="tab" href="#work_view" role="tab" aria-controls="profile">Progress</a>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane active" role="tabpanel" id="shift_view"></div>
+        <div class="tab-pane" role="tabpanel" id="employee_view"></div>
+        <div class="tab-pane" role="tabpanel" id="location_view"></div>
+        <div class="tab-pane" role="tabpanel" id="stats_view"></div>
+        <div class="tab-pane" role="tabpanel" id="work_view"></div>
+      </div>
+    </div>
+  </body>
 </html>

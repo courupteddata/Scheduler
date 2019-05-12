@@ -11,5 +11,6 @@ $('#employee_view').load('../partials/employee_partial.html', function(){
   });
 });
 
-location_view_update();
+location_load();
+
 });

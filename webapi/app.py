@@ -26,7 +26,7 @@ def get_static_page(path):
 
 @app.route("/")
 def get_main_page():
-    return send_from_directory("../UI", "home.html")
+    return send_from_directory("../UI", "index.html")
 
 
 if __name__ == '__main__':

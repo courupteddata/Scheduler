@@ -37,7 +37,7 @@ def entity_id_get(entity_id: int):
     return jsonify(to_return)
 
 
-@entity_api.route("/entity/<int:entity_id>/stats")
+@entity_api.route("/entity/<int:entity_id>/stats", methods=['GET'])
 def entity_id_get_stats(entity_id: int):
     start = request.args.get('start', type=str, default=None)
     end = request.args.get('end', type=str, default=None)

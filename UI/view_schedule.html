@@ -18,106 +18,191 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
   <script>
+    function submitEdit(form) {
+      $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/shift/' + form.elements[3].value,
+        type: 'DELETE',
+        success: function( data ) {
+          $.ajax({
+            url: 'http://127.0.0.1:5000/api/v1/shift',
+            type: 'POST',
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify({
+              "start":form.elements[0].value,
+              "end":form.elements[1].value,
+              "location_id":window.location.search.match(/id=[^&]*/)[0].substr(3),
+              "entity_id":form.elements[2].value
+            }),
+            success: function( data ) {
+              alert("Shift Edited (Please refresh to view)");
+              //should find some way to call calendar.render
+            }
+          });
+        }
+      });
+    };
+  </script>
+  <script>
+    function submitNew(form) {
+      $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/shift',
+        type: 'POST',
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify({
+          "start":form.elements[0].value,
+          "end":form.elements[1].value,
+          "location_id":window.location.search.match(/id=[^&]*/)[0].substr(3),
+          "entity_id":form.elements[2].value
+        }),
+        success: function( data ) {
+          alert("Shift Added (Please refresh to view)");
+          //should find some way to call calendar.render
+        }
+      });
+    };
+  </script>
+  <script>
+    function deleteShift(form) {
+      $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/shift/' + form.elements[3].value,
+        type: 'DELETE',
+        success: function( data ) {
+          alert("Shift Deleted (Please refresh to view)");
+          //should find some way to call calendar.render
+        }
+      });
+    };
+  </script>
+
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
       var calendarEl = document.getElementById('calendar');
-      var schedule_id = window.location.search.split("=")[1];
+      var location_id = window.location.search.match(/id=[^&]*/)[0].substr(3);
+      var start = window.location.search.match(/start=[^&]*/)[0].substr(6);
+      var end = window.location.search.match(/end=[^&]*/)[0].substr(4);
+      var data;
 
-      var data =
-      {
-        "shifts":[
-          {"id":"0", "start":"2019-05-06T10:00:00.756Z", "end":"2019-05-06T18:00:00.756Z", "label":"Amy"},
-          {"id":"1", "start":"2019-05-07T10:00:00.756Z", "end":"2019-05-07T18:00:00.756Z", "label":"Emily"},
-          {"id":"2", "start":"2019-05-08T10:00:00.756Z", "end":"2019-05-08T18:00:00.756Z", "label":"Frank"},
-          {"id":"3", "start":"2019-05-09T10:00:00.756Z", "end":"2019-05-09T18:00:00.756Z", "label":"Karl"},
-          {"id":"4", "start":"2019-05-10T10:00:00.756Z", "end":"2019-05-10T18:00:00.756Z", "label":"Beyonce"}
-        ]
-      };
-      var events = [];
-      data.shifts.forEach(function(shift) {
-        events.push({
-          title: shift.label,
-          start: shift.start,
-          end: shift.end,
-          id: shift.id
-        });
+      $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/shift',
+        type: 'GET',
+        data: {
+          "start":start,
+          "end":end,
+          "location_id":location_id
+        },
+        success: function( shifts ) {
+          data = shifts.shift;
+          var events = [];
+          data.forEach(function(shift) {
+            var employee_name;
+            $.ajax({
+              url: 'http://127.0.0.1:5000/api/v1/entity/' + shift.entity_id,
+              type: 'GET',
+              success: function( employee ) {
+                employee_name = employee.entity_name;
+              }
+            });
+            events.push({
+              title: employee_name,
+              start: shift.start,
+              end: shift.end,
+              id: shift.shift_id
+            });
+          });
+
+          var calendar = new FullCalendar.Calendar(calendarEl, {
+            plugins: ['dayGrid', 'interaction'],
+            defaultView: 'dayGridMonth',
+            editable: true,
+            currentTimezone: 'local',
+            eventDrop: function(info) {
+              if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
+                info.revert();
+              } else {
+                var employee_id;
+                $.ajax({
+                  url: 'http://127.0.0.1:5000/api/v1/entity',
+                  type: 'GET',
+                  success: function( employees ) {
+                    employees.entity.forEach(function(employee) {
+                     if(info.event.title == employee.entity_name) {
+                       employee_id = employee.entity_id
+                     }
+                   });
+                   $.ajax({
+                     url: 'http://127.0.0.1:5000/api/v1/shift/' + info.event.id,
+                     type: 'DELETE',
+                     success: function( data ) {
+                       $.ajax({
+                         url: 'http://127.0.0.1:5000/api/v1/shift',
+                         type: 'POST',
+                         contentType: 'application/json;charset=UTF-8',
+                         data: JSON.stringify({
+                           "start":info.event.start,
+                           "end":info.event.end,
+                           "location_id":window.location.search.match(/id=[^&]*/)[0].substr(3),
+                           "entity_id":employee_id
+                         }),
+                         success: function( data ) {
+                           alert("Shift Edited (Please refresh to view)");
+                           //should find some way to call calendar.render
+                         }
+                       });
+                     }
+                   });
+                  }
+                });
+              }
+            },
+            eventClick: function(info) {
+              var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
+              var start = (new Date(info.event.start - tzoffset)).toISOString().slice(0, 19)
+              var end = (new Date(info.event.end - tzoffset)).toISOString().slice(0, 19)
+              $('#start_time')[0].value = start;
+              $('#end_time')[0].value = end;
+              jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
+                data.entity.forEach(function(employee) {
+                  opt = document.createElement('option');
+                  opt.appendChild( document.createTextNode(employee.entity_name) );
+                  opt.value = employee.entity_id;
+                  document.getElementById("employee").appendChild(opt);
+                });
+              });
+              $('#shift_id')[0].value = info.event.id;
+              $('#submit')[0].setAttribute('onclick', 'submitEdit(this.form);');
+              $('#delete')[0].removeAttribute('hidden');
+              $('.modal-title')[0].innerHTML = 'Edit Shift'
+              $('.modal').modal();
+            },
+            dateClick: function(info) {
+              $('#start_time')[0].value = info.dateStr + "T07:00";
+              $('#end_time')[0].value = info.dateStr + "T15:00";
+              jQuery.get("http://127.0.0.1:5000/api/v1/entity", function( data ) {
+                data.entity.forEach(function(employee) {
+                  opt = document.createElement('option');
+                  opt.appendChild( document.createTextNode(employee.entity_name) );
+                  opt.value = employee.entity_id;
+                  document.getElementById("employee").appendChild(opt);
+                });
+              });
+              $('#shift_id')[0].value = null;
+              $('#submit')[0].setAttribute('onclick', 'submitNew(this.form);');
+              $('#delete')[0].setAttribute('hidden', '');
+              $('.modal-title')[0].innerHTML = 'Add Shift'
+              $('.modal').modal();
+            },
+            header: {
+              left: 'prev,next today',
+              center: 'title',
+            },
+            events: events
+          });
+
+          calendar.render();
+        }
       });
-
-      var calendar = new FullCalendar.Calendar(calendarEl, {
-        plugins: ['dayGrid', 'interaction'],
-        defaultView: 'dayGridMonth',
-        editable: true,
-        eventDrop: function(info) {
-          if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
-            info.revert();
-          } else {
-            // send info.event.start and end to api
-          }
-        },
-        eventClick: function(info) {
-          $('#start_time')[0].value = info.event.start.toISOString().substring(0, 16);
-          $('#end_time')[0].value = info.event.end.toISOString().substring(0, 16);
-          $('#employee')[0].placeholder = info.event.title;
-          $('#shift_id')[0].value = info.event.id;
-          $('#submit')[0].setAttribute('onclick', 'submitEdit(this.form);');
-          $('#delete')[0].removeAttribute('hidden');
-          $('.modal-title')[0].innerHTML = 'Edit Shift'
-          $('.modal').modal();
-        },
-        dateClick: function(info) {
-          $('#start_time')[0].value = info.dateStr + "T07:00";
-          $('#end_time')[0].value = info.dateStr + "T15:00";
-          $('#employee')[0].placeholder = 'Employee';
-          $('#shift_id')[0].value = null;
-          $('#submit')[0].setAttribute('onclick', 'submitNew(this.form);');
-          $('#delete')[0].setAttribute('hidden', '');
-          $('.modal-title')[0].innerHTML = 'Add Shift'
-          $('.modal').modal();
-        },
-        header: {
-          left: 'prev,next today',
-          center: 'title',
-        },
-        events: events
-      });
-
-      calendar.render();
     });
     </script>
-
-    <script>
-      function submitEdit(form) {
-        for (var i=0, element; element = form.elements[i]; i++) {
-          console.log(element.value);
-        }
-      };
-    </script>
-    <script>
-      function submitNew(form) {
-        $.ajax({
-          url: 'http://127.0.0.1:5000/api/v1/shift',
-          type: 'POST',
-          contentType: 'application/json;charset=UTF-8',
-          data: JSON.stringify({
-            "start":form.elements[0].value,
-            "end":form.elements[1].value,
-            "location_id":,
-            "entity_id":,
-            }
-          }),
-          success: function( data ) {
-            alert("Constraint submitted");
-          }
-        });
-      };
-    </script>
-    <script>
-      function deleteShift(form) {
-        for (var i=0, element; element = form.elements[i]; i++) {
-          console.log(element.value);
-        }
-      };
-    </script>
-
   <title>View Schedule</title>
 </head>
 <body>
@@ -143,7 +228,8 @@
             </div>
             <div class="form-group">
               <label for="employee">Assigned Employee:</label>
-              <input type="text" class="form-control" id="employee">
+              <select class="form-control" id="employee">
+              </select>
             </div>
             <input type="text" id="shift_id" hidden>
             <button type="button" class="btn btn-primary" data-dismiss="modal" id="submit">Submit changes</button>

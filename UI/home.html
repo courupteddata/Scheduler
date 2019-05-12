@@ -79,14 +79,27 @@
       var output = "";
       locations.location.forEach(function(location) {
         output += "<tr><td>" + location.location_label + "</td>"
-        output += "<td scope=\"row\"><div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>"
-        output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"date\" class=\"form-control\" id=\"end\"></div></td>"
-        output += "<td><a href=\"view_schedule.html?location_id=" + location.location_id + "\">View</td>"
-        output += "<td><a onClick=\"export(location.location_id)\">Export</td></tr>";
+        output += "<td scope=\"row\"><div class=\"form-group\"><label for=\"start" + location.location_id + "\">Start Date</label>"
+        output += "<input type=\"date\" class=\"form-control\" id=\"start" + location.location_id + "\" onChange=\"setStart(this.value, " + location.location_id + ");\"></div>"
+        output += "<div class=\"form-group\"><label for=\"end" + location.location_id + "\">End Date</label>"
+        output += "<input type=\"date\" class=\"form-control\" id=\"end" + location.location_id + "\" onChange=\"setEnd(this.value, " + location.location_id + ");\"></div></td>"
+        output += "<td><a href=\"view_schedule.html?id=" + location.location_id + "\" id=\"link" + location.location_id + "\">View</td>"
+        output += "<td><a onClick=\"export(" + location.location_id + ")\">Export</td></tr>";
       });
 
       document.getElementsByTagName("tbody")[1].innerHTML = output;
     });
+  </script>
+
+  <script>
+    function setStart(date, id) {
+      document.getElementById('link' + id).href = document.getElementById('link' + id).href.replace(/&start=[^&]*/g, "");
+      document.getElementById('link' + id).href += "&start=" + date;
+    }
+    function setEnd(date, id) {
+      document.getElementById('link' + id).href = document.getElementById('link' + id).href.replace(/&end=[^&]*/g, "");
+      document.getElementById('link' + id).href += "&end=" + date;
+    }
   </script>
 </body>
 </html>

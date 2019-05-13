@@ -113,13 +113,27 @@ def shift_add_template():
     except Exception as e:
         return jsonify({"error": f"invalid end. {str(e)}"}), 400
 
+    list_flag = False
+    dict_flag = False
+
     try:
         converted_data = []
         for item in data['sample']:
 
-            if not isinstance(item, list):
-                return jsonify({"error": "Sample should contain lists of lists"}), 400
-            converted_data.append([shiftmanager.Shift.unserialize(thing) for thing in item])
+            if isinstance(item, list):
+                converted_data.append([shiftmanager.Shift.unserialize(thing) for thing in item])
+                list_flag = True
+
+            if isinstance(item, dict):
+                converted_data.append(shiftmanager.Shift.unserialize(item))
+                dict_flag = True
+
+            if list_flag and not isinstance(item, list):
+                return jsonify({"error": "Sample found a dict when expecting list of list of shifts"}), 400
+
+            if dict_flag and not isinstance(item, dict):
+                return jsonify({"error": "Sample found a list when expecting list of shifts"}), 400
+
     except Exception as e:
         return jsonify({"error": f"Error parsing sample. {str(e)}"}), 400
 
@@ -168,3 +182,69 @@ def shift_add_repeat():
 @shift_api.route("/shift/<int:shift_id>", methods=['DELETE'])
 def shift_delete(shift_id: int):
     return jsonify({"shift_deleted": shared_shift_manager.delete_shift(shift_id) > 0})
+
+
+@shift_api.route("/shift/<int:shift_id>", methods=['PUT'])
+def shift_put(shift_id: int):
+    data = request.get_json(silent=True)
+
+    if data is None:
+        return jsonify({"error": "Missing body data"}), 400
+
+    error_msg = ""
+
+    start = None
+    end = None
+    location_id = None
+    info = None
+    entity_id = None
+
+    if "start" in data:
+        try:
+            start = parser.parse(data["start"])
+        except Exception as e:
+            error_msg += f"invalid start. {str(e)}"
+    if "end" not in data:
+        try:
+            end = parser.parse(data["end"])
+        except Exception as e:
+            error_msg += f"invalid end. {str(e)}"
+
+    if "location_id" in data:
+        if not shared_shift_manager.validate_location_id(data["location_id"]):
+            error_msg += "invalid location_id.  "
+        else:
+            location_id = data["location_id"]
+
+    if "info" in data:
+        info = data["info"]
+
+    if "entity_id" in data:
+        if data["entity_id"] != -1 and not shared_shift_manager.validate_entity_id(data["entity_id"]):
+            error_msg += "invalid entity_id.  "
+        else:
+            entity_id = data["entity_id"]
+
+    if start is not None and end is not None:
+        if start > end:
+            error_msg += "start must be before end.  "
+
+    if error_msg != "":
+        return jsonify({"error": error_msg}), 400
+
+    shift = shared_shift_manager.update_parts_of_shift(shift_id, start, end, location_id, info, entity_id)
+
+    if shift is None:
+        return jsonify({"error": "Could not find shift id or you did not pass any information to update"}), 400
+
+    return jsonify({"shift": shift.serialize()})
+
+
+@shift_api.route("/shift/<int:shift_id>", methods=['GET'])
+def shift_get_by_id(shift_id: int):
+    data = shared_shift_manager.get_shift_by_id(shift_id)
+
+    if data is None:
+        return jsonify({"error": "Shift now found"}), 400
+
+    return jsonify({"shift": data.serialize()})

@@ -1,8 +1,7 @@
 function stats_load() {
     $('#stats_view').load('../partials/stats_partial.html', function () {
 
-        location_view_update();
-        setup_location_modal();
+        populate_employee_list()
 
     });
 }

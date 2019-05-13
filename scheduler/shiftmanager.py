@@ -82,8 +82,8 @@ class ShiftManager:
         return modified_row_count
 
     def get_shift_by_id(self, shift_id: int) -> Union[None, Shift]:
-        data = self.connection.execute(f"SELECT id, start, end, info, entity_id, "
-                                       f"location_id FROM shift WHERE id =?;", (shift_id,)).fetchone()
+        data = self.connection.execute("SELECT id, start, end, info, entity_id, location_id FROM shift WHERE id=?;",
+                                       (shift_id,)).fetchone()
 
         if data is None:
             return None

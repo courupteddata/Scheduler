@@ -4,4 +4,5 @@ document.addEventListener('DOMContentLoaded', function () {
     stats_load();
     employee_load();
 
+
 });

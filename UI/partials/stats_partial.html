@@ -6,16 +6,28 @@
     </div>
     <div class="row">
         <div class="col">
-
+            <label>
+                Window Start:
+                <input type="date" name="Window Start" id="stats_window_start">
+            </label>
         </div>
         <div class="col">
-            <select class="selectPicker" data-live-search="true" id="stats_employee_select">
-
-            </select>
+            <label>
+                Window End:
+                <input type="date" name="Window End" id="stats_window_end">
+            </label>
+        </div>
+        <div class="col">
+            <label>
+                Select Employee:
+                <select class="selectpicker dropdown" data-dropup-auto="false" data-live-search="true"
+                        id="stats_employee_select" title="Select Employee">
+                </select>
+            </label>
         </div>
     </div>
     <div class="row">
-        <table class="table">
+        <table class="table table-striped">
             <thead>
             <tr>
                 <th scope="col">Location ID</th>

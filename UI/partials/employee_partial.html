@@ -49,7 +49,7 @@
                 </div>
                 <div class="form-group">
                     <label for="entity_locations_select" class="col-form-label">Locations:</label>
-                    <select id="entity_locations_select" class="form-control selectPicker" data-live-search="true"
+                    <select id="entity_locations_select" class="selectpicker form-control" data-live-search="true"
                             multiple>
                     </select>
                 </div>
@@ -57,7 +57,7 @@
                     <div class="col">
                         <div class="form-group">
                             <label for="entity_requirement_type_select" class="col-form-label">Requirement Type:</label>
-                            <select id="entity_requirement_type_select" class="form-control selectPicker">
+                            <select id="entity_requirement_type_select" class="selectpicker form-control" title="Pick a requirement to add">
                                 <option>Base</option>
                                 <optgroup label="Time Frame">
                                     <option>Date Range</option>
@@ -69,10 +69,9 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col align-content-center">
-                        <button class="btn btn-dark">Select</button>
-                    </div>
                 </div>
+                <button class="btn btn-dark">Select</button>
+
                 <div id="entity_requirement_partial"></div>
                 <div>
                     <table>

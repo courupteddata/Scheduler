@@ -113,13 +113,27 @@ def shift_add_template():
     except Exception as e:
         return jsonify({"error": f"invalid end. {str(e)}"}), 400
 
+    list_flag = False
+    dict_flag = False
+
     try:
         converted_data = []
         for item in data['sample']:
 
-            if not isinstance(item, list):
-                return jsonify({"error": "Sample should contain lists of lists"}), 400
-            converted_data.append([shiftmanager.Shift.unserialize(thing) for thing in item])
+            if isinstance(item, list):
+                converted_data.append([shiftmanager.Shift.unserialize(thing) for thing in item])
+                list_flag = True
+
+            if isinstance(item, dict):
+                converted_data.append(shiftmanager.Shift.unserialize(item))
+                dict_flag = True
+
+            if list_flag and not isinstance(item, list):
+                return jsonify({"error": "Sample found a dict when expecting list of list of shifts"}), 400
+
+            if dict_flag and not isinstance(item, dict):
+                return jsonify({"error": "Sample found a list when expecting list of shifts"}), 400
+
     except Exception as e:
         return jsonify({"error": f"Error parsing sample. {str(e)}"}), 400
 

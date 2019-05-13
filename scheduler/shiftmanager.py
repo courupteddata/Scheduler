@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Union
 import math
 from dateutil import parser
 import copy
@@ -126,12 +126,33 @@ class ShiftManager:
                 for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
                                                     "FROM shift WHERE entity_id=?", (entity_id,))]
 
-    def add_shift_from_sample(self, week: List[List[Shift]], end: datetime) -> int:
-        for day in week:
-            day.sort()
+    def add_shift_from_sample(self, template_week: Union[List[Shift], List[List[Shift]]], end: datetime) -> int:
+
+        if len(template_week) == 0:
+            return -1
+
+        if isinstance(template_week[0], Shift):
+            template_week.sort()
+            week = [[]]
+            index = 0
+            current_date = template_week[0].start.date()
+            for entry in template_week:
+                if entry.start.date() == current_date:
+                    week[index].append(copy.deepcopy(entry))
+                else:
+                    week.append([copy.deepcopy(entry)])
+                    current_date = entry.start.date()
+                    index += 1
+        elif isinstance(template_week, list):
+            week = template_week
+            for day in week:
+                day.sort()
+        else:
+            return -1
 
         shifts = []
         start = week[0][0].start
+        end = week[0][0].end
 
         # Put the template in the shift list
         for day in week:
@@ -141,6 +162,10 @@ class ShiftManager:
                         return -1
                 if not self.validate_location_id(shift.location_id):
                     return -1
+
+                if shift.end > end:
+                    end = shift.end
+
                 shifts.append(copy.deepcopy(shift))
 
         """
@@ -148,9 +173,7 @@ class ShiftManager:
         |M|T|W|T|F|S|S|
         |M|T|W|T|F|S|S|
         """
-        length_of_week_list = len(week) - 1
-        length_of_last_item = len(week[length_of_week_list]) - 1
-        length = (week[length_of_week_list][length_of_last_item].end - start).total_seconds()
+        length = (end - start).total_seconds()
         seconds_in_a_week = 604800
         week_offset = length/seconds_in_a_week
         days_offset = math.ceil(week_offset) * 7

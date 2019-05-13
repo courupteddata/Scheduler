@@ -10,44 +10,238 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
-  <title>Add Schedule</title>
-</head>
-<body>
-  <h3>Add Schedule</h3>
-  <form>
-    <div class="form-group">
-      <label for="start">Start Date:</label>
-      <input type="date" class="form-control" id="start">
-    </div>
-    <div class="form-group">
-      <label for="end">End Date:</label>
-      <input type="date" class="form-control" id="end">
-    </div>
-    <div class="custom-control custom-checkbox">
-      <input type="checkbox" class="custom-control-input" id="repeat">
-      <label class="custom-control-label" for="repeat">Repeat?</label>
-    </div>
-  </form>
-  <button class="btn btn-primary" onClick="addShift(1);" id="add_shift">Add New Shift</button>
-
-  <a href="home.html">Home</a>
-
   <script>
-    function addShift(num) {
-      document.getElementsByTagName('form')[0].innerHTML += `
-      <form>
-        <div class="form-group">
-          <label for="start_time">Shift ` + num + ` Start:</label>
-          <input type="datetime-local" class="form-control" id="start_time` + num + `">
-        </div>
-        <div class="form-group">
-          <label for="end_time">Shift ` + num + ` End:</label>
-          <input type="datetime-local" class="form-control" id="end_time` + num + `">
-        </div>
-      `;
-      $('#add_shift')[0].setAttribute('onclick', 'addShift(' + (num + 1) + ');');
-    };
+    document.addEventListener('DOMContentLoaded', function() {
+      $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/location',
+        type: 'GET',
+        success: function(data) {
+          data.location.forEach(function(location) {
+            opt = document.createElement('option');
+            opt.appendChild( document.createTextNode(location.location_label) );
+            opt.value = location.location_id;
+            document.getElementById("location").appendChild(opt);
+          });
+        }
+      });
+    });
+  </script>
+  <script>
+    function addMondayShift() {
+      document.getElementById('monday_shifts').innerHTML += `
+      <div class="form-group">
+        <label for="start">Start Time</label>
+        <input type="time" class="form-control" id="monday_start">
+      </div>
+      <div class="form-group">
+        <label for="end">End Time</label>
+        <input type="time" class="form-control" id="monday_end">
+      </div>`
+    }
+    function addTuesdayShift() {
+      document.getElementById('tuesday_shifts').innerHTML += `
+      <div class="form-group">
+        <label for="start">Start Time</label>
+        <input type="time" class="form-control" id="tuesday_start">
+      </div>
+      <div class="form-group">
+        <label for="end">End Time</label>
+        <input type="time" class="form-control" id="tuesday_end">
+      </div>`
+    }
+    function addWednesdayShift() {
+      document.getElementById('wednesday_shifts').innerHTML += `
+      <div class="form-group">
+        <label for="start">Start Time</label>
+        <input type="time" class="form-control" id="wednesday_start">
+      </div>
+      <div class="form-group">
+        <label for="end">End Time</label>
+        <input type="time" class="form-control" id="wednesday_end">
+      </div>`
+    }
+    function addThursdayShift() {
+      document.getElementById('thursday_shifts').innerHTML += `
+      <div class="form-group">
+        <label for="start">Start Time</label>
+        <input type="time" class="form-control" id="thursday_start">
+      </div>
+      <div class="form-group">
+        <label for="end">End Time</label>
+        <input type="time" class="form-control" id="thursday_end">
+      </div>`
+    }
+    function addFridayShift() {
+      document.getElementById('friday_shifts').innerHTML += `
+      <div class="form-group">
+        <label for="start">Start Time</label>
+        <input type="time" class="form-control" id="friday_start">
+      </div>
+      <div class="form-group">
+        <label for="end">End Time</label>
+        <input type="time" class="form-control" id="friday_end">
+      </div>`
+    }
+    function addSaturdayShift() {
+      document.getElementById('saturday_shifts').innerHTML += `
+      <div class="form-group">
+        <label for="start">Start Time</label>
+        <input type="time" class="form-control" id="saturday_start">
+      </div>
+      <div class="form-group">
+        <label for="end">End Time</label>
+        <input type="time" class="form-control" id="saturday_end">
+      </div>`
+    }
+    function addSundayShift() {
+      document.getElementById('sunday_shifts').innerHTML += `
+      <div class="form-group">
+        <label for="start">Start Time</label>
+        <input type="time" class="form-control" id="sunday_start">
+      </div>
+      <div class="form-group">
+        <label for="end">End Time</label>
+        <input type="time" class="form-control" id="sunday_end">
+      </div>`
+    }
+    function schedule(form) {
+      var end_date;
+      var location_id;
+      var shifts = [[], [], [], [], [], [], []];
+      for (var i=0, element; element = form.elements[i]; i++) {
+        if(element.type == "select-one") {
+          location_id = element.value
+        } else if(element.type == "date") {
+          end_date = element.value
+        } else if(element.type == "time"){
+          switch(element.id) {
+            case "monday_start":
+            shifts[0].push({
+              "start":element.value,
+              "end":form.elements[i+1].value,
+              "location_id":location_id,
+              "entity_id":-1
+            });
+            break;
+            case "tuesday_start":
+            shifts[1].push({
+              "start":element.value,
+              "end":form.elements[i+1].value,
+              "location_id":location_id,
+              "entity_id":-1
+            });
+            break;
+            case "wednesday_start":
+            shifts[2].push({
+              "start":element.value,
+              "end":form.elements[i+1].value,
+              "location_id":location_id,
+              "entity_id":-1
+            });
+            break;
+            case "thursday_start":
+            shifts[3].push({
+              "start":element.value,
+              "end":form.elements[i+1].value,
+              "location_id":location_id,
+              "entity_id":-1
+            });
+            break;
+            case "friday_start":
+            shifts[4].push({
+              "start":element.value,
+              "end":form.elements[i+1].value,
+              "location_id":location_id,
+              "entity_id":-1
+            });
+            break;
+            case "saturday_start":
+            shifts[5].push({
+              "start":element.value,
+              "end":form.elements[i+1].value,
+              "location_id":location_id,
+              "entity_id":-1
+            });
+            break;
+            case "sunday_start":
+            shifts[6].push({
+              "start":element.value,
+              "end":form.elements[i+1].value,
+              "location_id":location_id,
+              "entity_id":-1
+            });
+          }
+        }
+      }
+      console.log(shifts);
+      var test = $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/shift/template',
+        type: 'POST',
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify({
+          "end":form.elements[1].value,
+          "sample":shifts
+        }),
+        success: function(data) {
+          $.ajax({
+              url: "http://127.0.0.1:5000/api/v1/scheduler/fill",
+              type: "POST",
+              success: function(){
+                alert("Finished scheduling");
+              }
+            });
+        }
+      });
+      console.log(test);
+
+    }
   </script>
 
+  <title>Make Schedule</title>
+</head>
+<body>
+  <form>
+    <div class="form-group">
+      <label for="location">Location</label>
+      <select class="form-control" id="location"></select>
+    </div>
+    <div class="form-group">
+      <label for="end">End Date</label>
+      <input type="date" class="form-control" id="end" max="9999-12-31">
+    </div>
+    <!-- <div class="custom-control custom-checkbox">
+      <input type="checkbox" class="custom-control-input" id="repeat">
+      <label class="custom-control-label" for="repeat" checked>Repeat?</label>
+    </div> -->
+    <div id="monday_shifts">
+      <h3>Monday Shifts</h3>
+    </div>
+    <button type="button" class="btn btn-primary" id="add_monday_shift" onClick="addMondayShift();">Add Shift to Monday</button>
+    <div id="tuesday_shifts">
+      <h3>Tuesday Shifts</h3>
+    </div>
+    <button type="button" class="btn btn-primary" id="add_tuesday_shift" onClick="addTuesdayShift();">Add Shift to Tuesday</button>
+    <div id="wednesday_shifts">
+      <h3>Wednesday Shifts</h3>
+    </div>
+    <button type="button" class="btn btn-primary" id="add_wednesday_shift" onClick="addWednesdayShift();">Add Shift to Wednesday</button>
+    <div id="thursday_shifts">
+      <h3>Thursday Shifts</h3>
+    </div>
+    <button type="button" class="btn btn-primary" id="add_thursday_shift" onClick="addThursdayShift();">Add Shift to Thursday</button>
+    <div id="friday_shifts">
+      <h3>Friday Shifts</h3>
+    </div>
+    <button type="button" class="btn btn-primary" id="add_friday_shift" onClick="addFridayShift();">Add Shift to Friday</button>
+    <div id="saturday_shifts">
+      <h3>Saturday Shifts</h3>
+    </div>
+    <button type="button" class="btn btn-primary" id="add_saturday_shift" onClick="addSaturdayShift();">Add Shift to Saturday</button>
+    <div id="sunday_shifts">
+      <h3>Sunday Shifts</h3>
+    </div>
+    <button type="button" class="btn btn-primary" id="add_sunday_shift" onClick="addSundayShift();">Add Shift to Sunday</button>
+    <button type="button" class="btn btn-primary" id="make_sched" onClick="schedule(this.form)">Create + Fill Schedule</button>
+  </form>
 </body>
 </html>

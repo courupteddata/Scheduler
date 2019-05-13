@@ -199,7 +199,7 @@
           });
           break;
         case "Total (Rolling)":
-        var test = $.ajax({
+        $.ajax({
           url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
           type: 'POST',
           contentType: 'application/json;charset=UTF-8',
@@ -218,7 +218,6 @@
             alert("Constraint submitted");
           }
         });
-        console.log(test);
       }
     };
   </script>

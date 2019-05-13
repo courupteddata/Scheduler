@@ -41,6 +41,9 @@ class Shift:
         if end < start:
             raise Exception("Invalid order, end should be after start")
 
+        if "info" not in data:
+            data["info"] = ""
+
         return Shift(start, end, data["location_id"],
                      data["info"], data["entity_id"], data["shift_id"])
 

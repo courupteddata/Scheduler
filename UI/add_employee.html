@@ -10,19 +10,19 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
-  <title>Edit Employee</title>
+  <title>Add Employee</title>
 </head>
 <body>
-  <h3>Edit Employee</h3>
+  <h3>Add Employee</h3>
   <form>
     <div class="form-group">
       <label for="name">Name</label>
       <input type="text" class="form-control" id="name">
     </div>
-    <button type="button" class="btn btn-primary" onClick="processFormResults(this.form);">Change Name</button>
+    <button type="button" class="btn btn-primary" onClick="processFormResults(this.form);">Create Employee</button>
   </form>
-  <h3>Constraints</h3>
-  <table class="table">
+  <h3 hidden>Constraints</h3>
+  <table class="table" hidden>
     <thead>
       <tr>
         <th scope="col">Label</th>
@@ -34,9 +34,9 @@
     </tbody>
   </table>
   <a href="add_constraint.html?id=" id="add_link">
-    <button class="btn btn-primary">Add New Constraint</button>
+    <button class="btn btn-primary" hidden>Add New Constraint</button>
   </a>
-  <a href="index.html">Home</a>
+  <a href="home.html">Home</a>
 
 
   <script>
@@ -69,13 +69,22 @@
     };
 
     function processFormResults(form) {
-      var employee_id = window.location.search.split("=")[1];
-      var request = $.ajax({
-          url: "http://127.0.0.1:5000/api/v1/entity/" + employee_id,
-          type: "PUT",
-          data: JSON.stringify({ "entity_id":parseInt(employee_id), "entity_name":form.elements[0].value }),
-          contentType: 'application/json;charset=UTF-8'
-        });
+      $('h3')[1].removeAttribute('hidden');
+      $('table')[0].removeAttribute('hidden');
+      $('button')[1].removeAttribute('hidden');
+      var request;
+      $.ajax({
+        url: "http://127.0.0.1:5000/api/v1/entity",
+        type: "POST",
+        data: JSON.stringify({ "entity_name":form.elements[0].value }),
+        contentType: 'application/json;charset=UTF-8',
+        success: function(text) {
+          request = text;
+          console.log(request);
+          $('#add_link')[0].setAttribute('href', 'add_constraint.html?id=' + request.entity_id);
+        }
+      });
+
     };
   </script>
 </body>

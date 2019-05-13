@@ -120,6 +120,9 @@ class EntityManager:
         data = [self.connection.execute('SELECT id,label FROM location '
                                         'WHERE id=?;', loc).fetchone() for loc in locations]
 
+        if data is None:
+            return []
+
         return [{"location_id": item[0], "location_label": item[1]} for item in data]
 
     def get_stats_for_entity(self, entity_id: int, start: datetime = None, end: datetime = None) -> List[Dict]:

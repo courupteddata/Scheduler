@@ -44,6 +44,9 @@ class Shift:
         if "info" not in data:
             data["info"] = ""
 
+        if "entity_id" not in data:
+            data["entity_id"] = -1
+
         return Shift(start, end, data["location_id"],
                      data["info"], data["entity_id"], data["shift_id"])
 

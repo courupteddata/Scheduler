@@ -105,17 +105,25 @@
       var end = document.getElementById('link' + id).href.match(/end=[^&]*/)[0].substr(4);
 
       $.ajax({
-        url: 'http://127.0.0.1:5000/api/v1/shift',
+        url: 'http://127.0.0.1:5000/api/v1/shift?export=true',
         type: 'GET',
         contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify({
           "start":start,
           "end":end,
-          "export":true,
           "location_id":id
         }),
         success: function(data) {
-          console.log(data);
+          var element = document.createElement('a');
+          element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+          element.setAttribute('download', "schedule.csv");
+
+          element.style.display = 'none';
+          document.body.appendChild(element);
+
+          element.click();
+
+          document.body.removeChild(element);
         }
       });
     }

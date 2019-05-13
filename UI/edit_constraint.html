@@ -20,6 +20,10 @@
       <input type="text" class="form-control" id="label">
     </div>
     <div class="form-group">
+      <label for="cost">Cost</label>
+      <input type="text" class="form-control" id="cost">
+    </div>
+    <div class="form-group">
       <label for="constraint_type">Change Type</label>
       <select class="form-control" id="constraint_type" onChange="addFields(this.options[this.selectedIndex].value);">
         <option>Day of Week</option>
@@ -42,7 +46,6 @@
     var constraint_id = window.location.search.match(/constraint_id=[^&]*/)[0].substr(14);
     //use constraint_id to fetch real constraint
     jQuery.get("http://127.0.0.1:5000/api/v1/entity/requirement/" + constraint_id, function( data ) {
-      console.log(data);
       switch(data.requirement_type) {
         case "TIMEFRAME":
           switch(data.requirement_data.time_frame_type) {
@@ -79,23 +82,21 @@
       }
       document.getElementById("label").value = data.requirement_data.label;
     });
-    var constraint = {
-        "id":0, "label":"Can't work Saturdays", "type":"Day of Week", "cost":1.43,
-        "day_of_week":{"year":2019, "month":4, "day":20}
-      }
     function addFields(type) {
       var output = "";
       switch(type) {
         case "Day of Week":
-          output += "<div class=\"form-group\"><label for=\"date\">Day of Week</label><input type=\"text\" class=\"form-control\" id=\"date\"></div>";
+          output += "<div class=\"form-group\"><label for=\"date\">Day of Week</label><select class=\"form-control\"id=\"date\">"
+          output += "<option value=\"0\">Monday</option><option value=\"1\">Tuesday</option><option value=\"2\">Wednesday</option>"
+          output += "<option value=\"3\">Thursday</option><option value=\"4\">Friday</option><option value=\"5\">Saturday</option><option value=\"6\">Sunday</option></select></div>";
           break;
         case "Date Range":
-          output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"text\" class=\"form-control\" id=\"start\"></div>";
-          output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"text\" class=\"form-control\" id=\"end\"></div>";
+          output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>";
+          output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"date\" class=\"form-control\" id=\"end\"></div>";
           break;
         case "Time Range":
-          output += "<div class=\"form-group\"><label for=\"start\">Start Time</label><input type=\"text\" class=\"form-control\" id=\"start\"></div>";
-          output += "<div class=\"form-group\"><label for=\"end\">End Time</label><input type=\"text\" class=\"form-control\" id=\"end\"></div>";
+          output += "<div class=\"form-group\"><label for=\"start\">Start Time</label><input type=\"time\" class=\"form-control\" id=\"start\"></div>";
+          output += "<div class=\"form-group\"><label for=\"end\">End Time</label><input type=\"time\" class=\"form-control\" id=\"end\"></div>";
           break;
         case "Relative (After)":
           output += "<div class=\"form-group\"><label for=\"delta\">Minimum Distance</label><input type=\"text\" class=\"form-control\" id=\"delta\"></div>";
@@ -104,14 +105,14 @@
           output += "<div class=\"form-group\"><label for=\"delta\">Maximum Distance</label><input type=\"text\" class=\"form-control\" id=\"delta\"></div>";
           break;
         case "Total (Fixed)":
-          output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"text\" class=\"form-control\" id=\"start\"></div>";
-          output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"text\" class=\"form-control\" id=\"end\"></div>";
+          output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>";
+          output += "<div class=\"form-group\"><label for=\"end\">End Date</label><input type=\"date\" class=\"form-control\" id=\"end\"></div>";
           output += "<div class=\"form-group\"><label for=\"total\">Total Hours</label><input type=\"text\" class=\"form-control\" id=\"total\"></div>";
           break;
         case "Total (Rolling)":
-          output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"text\" class=\"form-control\" id=\"start\"></div>";
-          output += "<div class=\"form-group\"><label for=\"length\">Time Period</label><input type=\"text\" class=\"form-control\" id=\"length\"></div>";
-          output += "<div class=\"form-group\"><label for=\"total\">Total</label><input type=\"text\" class=\"form-control\" id=\"total\"></div>";
+          output += "<div class=\"form-group\"><label for=\"start\">Start Date</label><input type=\"date\" class=\"form-control\" id=\"start\"></div>";
+          output += "<div class=\"form-group\"><label for=\"length\">Time Period(number of hours)</label><input type=\"text\" class=\"form-control\" id=\"length\"></div>";
+          output += "<div class=\"form-group\"><label for=\"total\">Total Hours</label><input type=\"text\" class=\"form-control\" id=\"total\"></div>";
       }
       document.getElementById("fields").innerHTML = output;
     }
@@ -119,9 +120,151 @@
 
   <script>
     function processFormResults(form) {
-      for (var i=0, element; element = form.elements[i]; i++) {
-        console.log(element.value);
-      }
+      var employee_id = window.location.search.match(/employee_id=[^&]*/)[0].substr(12);
+      var constraint_id = window.location.search.match(/constraint_id=[^&]*/)[0].substr(14);
+      $.ajax({
+        url: 'http://127.0.0.1:5000/api/v1/entity/requirement/' + constraint_id,
+        type: 'DELETE',
+        success: function( data ) {
+          switch(form.elements[2].value) {
+            case "Day of Week":
+              $.ajax({
+                url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+                type: 'POST',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify({
+                  "requirement_type":"TIMEFRAME", "data":{
+                    "cost":parseInt(form.elements[1].value),
+                    "label":form.elements[0].value,
+                    "time_frame_type": "DAY_OF_WEEK",
+                    "day_of_week":parseInt(form.elements[3].value)
+                  }
+                }),
+                success: function( data ) {
+                  alert("Constraint submitted");
+                }
+              });
+              break;
+            case "Date Range":
+              $.ajax({
+                url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+                type: 'POST',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify({
+                  "requirement_type":"TIMEFRAME", "data":{
+                    "cost":parseInt(form.elements[1].value),
+                    "label":form.elements[0].value,
+                    "time_frame_type": "DATE_RANGE",
+                    "datetime_start":form.elements[3].value,
+                    "datetime_end":form.elements[4].value,
+                  }
+                }),
+                success: function( data ) {
+                  alert("Constraint submitted");
+                }
+              });
+              break;
+            case "Time Range":
+              $.ajax({
+                url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+                type: 'POST',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify({
+                  "requirement_type":"TIMEFRAME", "data":{
+                    "cost":parseInt(form.elements[1].value),
+                    "label":form.elements[0].value,
+                    "time_frame_type": "TIME_RANGE",
+                    "time_start":form.elements[3].value,
+                    "time_end":form.elements[4].value,
+                  }
+                }),
+                success: function( data ) {
+                  alert("Constraint submitted");
+                }
+              });
+              break;
+            case "Relative (After)":
+              $.ajax({
+                url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+                type: 'POST',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify({
+                  "requirement_type":"RELATIVE", "data":{
+                    "cost":parseInt(form.elements[1].value),
+                    "label":form.elements[0].value,
+                    "during": false,
+                    "after": true,
+                    "distance":parseFloat(form.elements[3].value),
+                  }
+                }),
+                success: function( data ) {
+                  alert("Constraint submitted");
+                }
+              });
+              break;
+            case "Relative (During)":
+              $.ajax({
+                url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+                type: 'POST',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify({
+                  "requirement_type":"RELATIVE", "data":{
+                    "cost":parseInt(form.elements[1].value),
+                    "label":form.elements[0].value,
+                    "during": true,
+                    "after": false,
+                    "distance":parseFloat(form.elements[3].value),
+                  }
+                }),
+                success: function( data ) {
+                  alert("Constraint submitted");
+                }
+              });
+              break;
+            case "Total (Fixed)":
+              $.ajax({
+                url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+                type: 'POST',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify({
+                  "requirement_type":"TOTALS", "data":{
+                    "cost":parseInt(form.elements[1].value),
+                    "label":form.elements[0].value,
+                    "is_rolling": false,
+                    "total_requirement": parseInt(form.elements[5].value),
+                    "scale": false,
+                    "start":form.elements[3].value,
+                    "end":form.elements[4].value
+                  }
+                }),
+                success: function( data ) {
+                  alert("Constraint submitted");
+                }
+              });
+              break;
+            case "Total (Rolling)":
+            $.ajax({
+              url: 'http://127.0.0.1:5000/api/v1/entity/' + employee_id + '/requirement',
+              type: 'POST',
+              contentType: 'application/json;charset=UTF-8',
+              data: JSON.stringify({
+                "requirement_type":"TOTALS", "data":{
+                  "cost":parseInt(form.elements[1].value),
+                  "label":form.elements[0].value,
+                  "is_rolling": true,
+                  "total_requirement": parseInt(form.elements[5].value),
+                  "scale": false,
+                  "start":form.elements[3].value,
+                  "length":parseFloat(form.elements[4].value)
+                }
+              }),
+              success: function( data ) {
+                alert("Constraint submitted");
+              }
+            });
+          }
+        }
+      });
     };
   </script>
 </body>

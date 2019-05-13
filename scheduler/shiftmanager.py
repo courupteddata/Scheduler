@@ -47,6 +47,9 @@ class Shift:
         if "entity_id" not in data:
             data["entity_id"] = -1
 
+        if "shift_id" not in data:
+            data["shift_id"] = -1
+
         return Shift(start, end, data["location_id"],
                      data["info"], data["entity_id"], data["shift_id"])
 
@@ -77,6 +80,65 @@ class ShiftManager:
                                                       shift.entity_id, shift.location_id)).rowcount
         self.connection.commit()
         return modified_row_count
+
+    def get_shift_by_id(self, shift_id: int) -> Union[None, Shift]:
+        data = self.connection.execute(f"SELECT id, start, end, info, entity_id, "
+                                       f"location_id FROM shift WHERE id =?;", (shift_id,)).fetchone()
+
+        if data is None:
+            return None
+
+        return Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]), info=data[3],
+                     entity_id=data[4], location_id=data[5])
+
+    def update_parts_of_shift(self, shift_id: int, start: datetime = None, end: datetime = None, location_id: int = None, info: str = None, entity_id: int = None) -> Union[None, Shift]:
+        if self.get_shift_by_id(shift_id) is None:
+            return None
+
+        set_string = ""
+        query_params = ()
+        previous = False
+
+        if start is not None:
+            previous = True
+            query_params += (start.isoformat(),)
+            set_string += "start=?"
+        if end is not None:
+            if previous:
+                set_string += ","
+            previous = True
+            query_params += (end.isoformat(),)
+            set_string += "end=?"
+        if location_id is not None:
+            if previous:
+                set_string += ","
+            previous = True
+            query_params += (location_id,)
+            set_string += "location_id=?"
+        if info is not None:
+            if previous:
+                set_string += ","
+            previous = True
+            query_params += (info,)
+            set_string += "info=?"
+
+        if entity_id is not None:
+            if previous:
+                set_string += ","
+            previous = True
+            query_params += (entity_id,)
+            set_string += "entity_id=?"
+
+        if previous:
+            set_string = " SET " + set_string
+            query_params += (shift_id,)
+
+            self.connection.execute(f"UPDATE shift {set_string} WHERE id=?;", query_params)
+            self.connection.commit()
+
+            return self.get_shift_by_id(shift_id)
+
+        return None
 
     def fill_shift_by_id(self, shift_id: int, entity_id: int) -> int:
         modified_row_count = self.connection.execute("UPDATE shift SET entity_id=? WHERE id=?",

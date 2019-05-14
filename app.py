@@ -39,12 +39,12 @@ def prepare_api():
 
 @app.route("/<path:path>")
 def get_static_page(path):
-    return send_from_directory("../UI", path)
+    return send_from_directory("UI", path)
 
 
 @app.route("/")
 def get_main_page():
-    return send_from_directory("../UI", "index.html")
+    return send_from_directory("UI", "index.html")
 
 
 if __name__ == '__main__':

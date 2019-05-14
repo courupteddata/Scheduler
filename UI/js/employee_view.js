@@ -55,6 +55,9 @@ function employee_setup_modal() {
         let modal_submit = modal.find("#employee_submit");
         let modal_delete = modal.find('#employee_delete');
 
+        let modal_location_select = modal.find("#employee_location_select");
+        employee_fill_location_modal(entity_id, modal_location_select);
+
         let modal_requirement_type_select = modal.find("#employee_requirement_type_select");
 
         let modal_requirement_view = modal.find("#employee_requirement_partial");
@@ -104,25 +107,27 @@ function employee_setup_modal() {
 }
 
 function employee_fill_location_modal(entity_id, select_element) {
+    select_element.empty();
+
+    employee_original_location_ids.clear();
+    employee_updated_location_ids.clear();
+
     jQuery.get("/api/v1/location", function (locations) {
-
-
-        jQuery.get("/api/v1/entity" + entity_id + "/location", function (locations) {
-
-        });
-
-
         let output = "";
-
         locations.location.forEach(function (location) {
-            output += '<tr><td>' + location.location_id + '</td><td>' + location.location_label +
-                '</td><td><button type="button" class="btn btn-primary" data-toggle="modal" ' +
-                'data-target="#location_modal" data-purpose="Edit" ' +
-                'data-location-id="' + location.location_id + '" ' +
-                'data-location-label="' + location.location_label + '">Edit</button></td></tr>';
+            output += '<option value="' + location.location_id + '">' + location.location_label + '</option>'
         });
 
-        document.getElementById("location_table_body").innerHTML = output;
+        select_element.append(output).selectpicker('refresh');
+
+
+        jQuery.get("/api/v1/entity/" + entity_id + "/location", function (locations) {
+            locations.location.forEach(function (location) {
+                employee_original_location_ids.add(location.location_id)
+            });
+            select_element.selectpicker('val', Array.from(employee_original_location_ids));
+        });
+
     });
 
 }

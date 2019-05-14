@@ -3,7 +3,7 @@ let employee_requirement_types = [];
 let employee_original_location_ids = new Set();
 let employee_updated_location_ids = new Set();
 
-let employee_requirements_to_add = {};
+let employee_requirements_to_add = [];
 
 let employee_delete_requirement_ids = new Set();
 
@@ -63,9 +63,21 @@ function employee_setup_modal() {
         let modal_requirement_view = modal.find("#employee_requirement_partial");
 
 
+        employee_requirements_to_add = [];
+
+
         modal_requirement_type_select.off("changed.bs.select").selectpicker('refresh').on('changed.bs.select', function (e) {
-            stats_selected_id = $(e.currentTarget).val();
-            modal_requirement_view.empty().load(requirement_types[stats_selected_id].partial);
+            let modal_requirement_selected_id = $(e.currentTarget).val();
+            requirement_load_partial(modal_requirement_view, modal_requirement_selected_id,
+                function () {
+                    employee_requirements_to_add.push(requirement_submit_data(modal_requirement_selected_id, modal_requirement_view))
+                },
+                function () {
+                    modal_requirement_type_select.val('').selectpicker('refresh');
+                    modal_requirement_view.empty()
+                },
+                function () {
+                });
         });
 
 
@@ -90,6 +102,7 @@ function employee_setup_modal() {
 
             modal_entity_id_form.hide();
             modal.find('#employee_submit').off('click').click(function () {
+                employee_create_one(modal_entity_name_input.val());
                 //location_create_location(modal_loc_label_input.val());
             });
             //modal_loc_label_input.val("");
@@ -130,4 +143,47 @@ function employee_fill_location_modal(entity_id, select_element) {
 
     });
 
+}
+
+function employee_update_one(entity_id, name) {
+
+}
+
+function employee_create_one(name) {
+    $.ajax({
+        url: '/api/v1/entity',
+        type: 'POST',
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify({"entity_name": name})
+    }).always(function () {
+        employee_update_table();
+    });
+}
+
+function employee_delete_one(entity_id) {
+
+}
+
+function employee_add_requirements(entity_id) {
+    for (item of employee_requirements_to_add) {
+        $.ajax({
+            url: '/api/v1/entity/' + entity_id + '/requirement',
+            type: 'POST',
+            contentType: 'application/json;charset=UTF-8',
+            data: JSON.stringify(item)
+        }).always(function () {
+
+        });
+
+    }
+}
+
+function employee_delete_requirement(requirement_id) {
+    $.ajax({
+        url: '/api/v1/entity/requirement/' + requirement_id,
+        type: 'DELETE',
+        contentType: 'application/json;charset=UTF-8',
+    }).always(function () {
+
+    });
 }

@@ -106,3 +106,34 @@ function requirement_get_type_number(requirement) {
         }
     }
 }
+
+function requirement_load_partial(destination, requirement_type_number, submit_handler, cancel_handler, delete_handler){
+    destination.empty().load(requirement_types[requirement_type_number].partial, function (){
+        let partial = $(this);
+
+        partial.find("#requirement_delete").off('click').on('click', delete_handler);
+        partial.find("#requirement_cancel").off('click').on('click', cancel_handler);
+        partial.find("#requirement_submit").off('click').on('click', submit_handler);
+    });
+}
+
+function requirement_submit_data(requirement_type_number, element){
+    let requirement_template =  requirement_types[requirement_type_number];
+
+    let data = {
+        "requirement_type": requirement_template["requirement_type"],
+        "data": {}
+    };
+
+    //store constant data from template
+    for(let const_data of requirement_template["const_data"]){
+        data.data[const_data.data_id] = const_data.data;
+    }
+
+    if (requirement_type_number >= 1 && requirement_type_number <= 4){
+        for (let form_data of requirement_template["id_map"]){
+            data.data[form_data["data_id"]] = element.find("#" + form_data["form_id"]).val();
+        }
+        return data;
+    }
+}

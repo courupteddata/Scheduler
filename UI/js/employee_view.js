@@ -38,7 +38,7 @@ function employee_update_table() {
 
 function employee_setup_modal() {
     let employee_modal = $('#employee_modal');
-    
+
     employee_modal.on('show.bs.modal', function (event) {
         let button = $(event.relatedTarget); // Button that triggered the modal
         let purpose = button.data('purpose');

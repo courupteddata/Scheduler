@@ -37,7 +37,9 @@ function employee_update_table() {
 }
 
 function employee_setup_modal() {
-    $('#employee_modal').on('show.bs.modal', function (event) {
+    let employee_modal = $('#employee_modal');
+    
+    employee_modal.on('show.bs.modal', function (event) {
         let button = $(event.relatedTarget); // Button that triggered the modal
         let purpose = button.data('purpose');
         let entity_id = button.data('entityId'); // Extract info from data-* attributes
@@ -52,6 +54,17 @@ function employee_setup_modal() {
 
         let modal_submit = modal.find("#employee_submit");
         let modal_delete = modal.find('#employee_delete');
+
+        let modal_requirement_type_select = modal.find("#employee_requirement_type_select");
+
+        let modal_requirement_view = modal.find("#employee_requirement_partial");
+
+
+        modal_requirement_type_select.off("changed.bs.select").selectpicker('refresh').on('changed.bs.select', function (e) {
+            stats_selected_id = $(e.currentTarget).val();
+            modal_requirement_view.empty().load(requirement_types[stats_selected_id].partial);
+        });
+
 
         if (purpose === "Edit") {
             modal_delete.show();
@@ -79,12 +92,19 @@ function employee_setup_modal() {
             //modal_loc_label_input.val("");
         }
 
-    })
+
+    });
+
+    employee_modal.on('hide.bs.modal', function () {
+        let modal = $(this);
+        modal.find("#employee_requirement_partial").empty();
+
+        modal.find("#employee_requirement_type_select").val('').selectpicker('refresh');
+    });
 }
 
 function employee_fill_location_modal(entity_id, select_element) {
     jQuery.get("/api/v1/location", function (locations) {
-
 
 
         jQuery.get("/api/v1/entity" + entity_id + "/location", function (locations) {

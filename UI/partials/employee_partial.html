@@ -30,7 +30,7 @@
 <!-- Modal -->
 <div class="modal fade" id="employee_modal" tabindex="-1" role="dialog" aria-labelledby="modify_employee"
      aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="employee_modal_label">Employee</h5>
@@ -58,20 +58,20 @@
                     <div class="col">
                         <div class="form-group">
                             <label for="employee_requirement_type_select" class="col-form-label">Requirement Type:</label>
-                            <select id="employee_requirement_type_select" class="selectpicker form-control" title="Pick a requirement to add">
-                                <option>Base</option>
+                            <select id="employee_requirement_type_select" class="form-control selectpicker" title="Pick a requirement to add">
+                                <option value="1">Base</option>
                                 <optgroup label="Time Frame">
-                                    <option>Date Range</option>
-                                    <option>Day of Week</option>
-                                    <option>Time Range</option>
+                                    <option value="2">Date Range</option>
+                                    <option value="3">Day of Week</option>
+                                    <option value="4">Time Range</option>
                                 </optgroup>
-                                <option>Relative</option>
-                                <option>Totals</option>
+                                <option value="5">Relative</option>
+                                <option value="6">Totals</option>
                             </select>
                         </div>
                     </div>
                 </div>
-                <button class="btn btn-dark">Select</button>
+
 
                 <div id="employee_requirement_partial"></div>
                 <div>
@@ -88,8 +88,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger mr-auto" data-dismiss="modal" id="employee_delete">DELETE
-                </button>
+                <button type="button" class="btn btn-danger mr-auto" data-dismiss="modal" id="employee_delete">DELETE</button>
                 <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> -->
                 <button type="button" class="btn btn-primary" data-dismiss="modal" id="employee_submit">Submit</button>
             </div>

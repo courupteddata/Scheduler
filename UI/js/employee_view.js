@@ -1,3 +1,15 @@
+let employee_requirement_types = [];
+
+let employee_original_location_ids = new Set();
+let employee_updated_location_ids = new Set();
+
+let employee_requirements_to_add = {};
+
+let employee_delete_requirement_ids = new Set();
+
+let employee_name_change = false;
+let employee_updated_name = "";
+
 function employee_load() {
 
     $('#employee_view').load('../partials/employee_partial.html', function () {
@@ -11,9 +23,13 @@ function employee_update_table() {
 
     jQuery.get("/api/v1/entity", function (data) {
 
-        var output = "";
+        let output = "";
         data.entity.forEach(function (employee) {
-            output += '<tr><td>' + employee.entity_id + '</td><td>' + employee.entity_name + '</td><td><button class="btn" data-toggle="modal" data-target="#employee_modal" data-purpose="Edit" data-entity-id="' + employee.entity_id + '" data-entity-name="' + employee.name + '" >Edit</button></td></tr>';
+            output +=
+                '<tr><td>' + employee.entity_id +
+                '</td><td>' + employee.entity_name +
+                '</td><td><button class="btn btn-primary" data-toggle="modal" data-target="#employee_modal" data-purpose="Edit" ' +
+                'data-entity-id="' + employee.entity_id + '" data-entity-name="' + employee.entity_name + '" >Edit</button></td></tr>';
         });
 
         document.getElementById("employee_table_body").innerHTML = output;
@@ -22,26 +38,26 @@ function employee_update_table() {
 
 function employee_setup_modal() {
     $('#employee_modal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var purpose = button.data('purpose');
-        var entity_id = button.data('entityId'); // Extract info from data-* attributes
-        var entity_name = button.data("entityName");
+        let button = $(event.relatedTarget); // Button that triggered the modal
+        let purpose = button.data('purpose');
+        let entity_id = button.data('entityId'); // Extract info from data-* attributes
+        let entity_name = button.data("entityName");
 
-        var modal = $(this);
+        let modal = $(this);
 
         modal.find('#employee_modal_label').text(purpose + ' Employee');
 
-        var modal_entity_id_form = modal.find('#entity_id_field');
-        var modal_entity_name_input = modal.find('#entity_name');
+        let modal_entity_id_form = modal.find('#employee_id_field');
+        let modal_entity_name_input = modal.find('#employee_name_field');
 
-        var modal_submit = modal.find("#employee_submit");
-        var modal_delete = modal.find('#employee_delete');
+        let modal_submit = modal.find("#employee_submit");
+        let modal_delete = modal.find('#employee_delete');
 
         if (purpose === "Edit") {
             modal_delete.show();
 
             modal_entity_id_form.show();
-            modal_entity_id_form.find('#entity_id').val(entity_id);
+            modal_entity_id_form.find('#employee_id_input').val(entity_id);
 
             modal_entity_name_input.val(entity_name);
 
@@ -64,4 +80,29 @@ function employee_setup_modal() {
         }
 
     })
+}
+
+function employee_fill_location_modal(entity_id, select_element) {
+    jQuery.get("/api/v1/location", function (locations) {
+
+
+
+        jQuery.get("/api/v1/entity" + entity_id + "/location", function (locations) {
+
+        });
+
+
+        let output = "";
+
+        locations.location.forEach(function (location) {
+            output += '<tr><td>' + location.location_id + '</td><td>' + location.location_label +
+                '</td><td><button type="button" class="btn btn-primary" data-toggle="modal" ' +
+                'data-target="#location_modal" data-purpose="Edit" ' +
+                'data-location-id="' + location.location_id + '" ' +
+                'data-location-label="' + location.location_label + '">Edit</button></td></tr>';
+        });
+
+        document.getElementById("location_table_body").innerHTML = output;
+    });
+
 }

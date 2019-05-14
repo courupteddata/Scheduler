@@ -11,7 +11,7 @@ function location_view_update() {
 
     jQuery.get("/api/v1/location", function (locations) {
 
-        var output = "";
+        let output = "";
 
         locations.location.forEach(function (location) {
             output += '<tr><td>' + location.location_id + '</td><td>' + location.location_label +
@@ -28,18 +28,18 @@ function location_view_update() {
 
 function location_setup_modal() {
     $('#location_modal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget); // Button that triggered the modal
-        var purpose = button.data('purpose');
-        var location_id = button.data('locationId'); // Extract info from data-* attributes
-        var location_label = button.data('locationLabel');
+        let button = $(event.relatedTarget); // Button that triggered the modal
+        let purpose = button.data('purpose');
+        let location_id = button.data('locationId'); // Extract info from data-* attributes
+        let location_label = button.data('locationLabel');
 
-        var modal = $(this);
+        let modal = $(this);
 
         modal.find('.modal-title').text(purpose + ' Location');
 
-        var modal_loc_id_form = modal.find('#location_id_form');
-        var modal_loc_label_input = modal.find('#location_label');
-        var modal_delete = modal.find('#location_delete');
+        let modal_loc_id_form = modal.find('#location_id_form');
+        let modal_loc_label_input = modal.find('#location_label');
+        let modal_delete = modal.find('#location_delete');
 
         if (purpose === "Edit") {
             modal_delete.show();

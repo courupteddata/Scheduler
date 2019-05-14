@@ -20,6 +20,8 @@ import sqlite3
 
 
 class DB:
+    ENFORCE_CONSTRAINT = 'PRAGMA foreign_keys = ON;'
+
     ENTITY_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS entity (' \
                           'id INTEGER PRIMARY KEY AUTOINCREMENT, ' \
                           'name TEXT NOT NULL);'
@@ -31,9 +33,9 @@ class DB:
     ENTITY_LOCATION_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS entity_location (' \
                                    'entity_id INTEGER NOT NULL, ' \
                                    'location_id INTEGER NOT NULL, ' \
-                                   'CONSTRAINT check_ent FOREIGN KEY(entity_id) ' \
+                                   'CONSTRAINT location_check_ent FOREIGN KEY(entity_id) ' \
                                    'REFERENCES entity(id) ON DELETE CASCADE, ' \
-                                   'CONSTRAINT check_loc FOREIGN KEY(location_id) ' \
+                                   'CONSTRAINT location_check_loc FOREIGN KEY(location_id) ' \
                                    'REFERENCES location(id) ON DELETE CASCADE, ' \
                                    'PRIMARY KEY(entity_id, location_id));'
 
@@ -44,15 +46,18 @@ class DB:
                          'info TEXT, ' \
                          'entity_id INTEGER DEFAULT -1, ' \
                          'location_id INTEGER NOT NULL ,' \
-                         'CONSTRAINT check_ent FOREIGN KEY(entity_id) REFERENCES entity(id) ON DELETE SET DEFAULT,' \
-                         'CONSTRAINT check_loc FOREIGN KEY(location_id) REFERENCES location(id) ON DELETE CASCADE);'
+                         'CONSTRAINT shift_check_ent FOREIGN KEY(entity_id) ' \
+                         'REFERENCES entity(id) ON DELETE SET DEFAULT,' \
+                         'CONSTRAINT shift_check_loc FOREIGN KEY(location_id) ' \
+                         'REFERENCES location(id) ON DELETE CASCADE);'
 
     REQUIREMENT_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS requirement (' \
                                'id INTEGER PRIMARY KEY AUTOINCREMENT, ' \
                                'entity_id INTEGER NOT NULL,' \
                                'type TEXT NOT NULL, ' \
                                'json_data TEXT NOT NULL,' \
-                               'CONSTRAINT check_ent FOREIGN KEY (entity_id) REFERENCES entity(id) ON DELETE CASCADE);'
+                               'CONSTRAINT requirement_check_ent FOREIGN KEY (entity_id) ' \
+                               'REFERENCES entity(id) ON DELETE CASCADE);'
 
     WORK_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS work (' \
                         'id INTEGER PRIMARY KEY AUTOINCREMENT,' \
@@ -61,6 +66,8 @@ class DB:
 
     def __init__(self):
         self.db = sqlite3.connect("scheduler.db", check_same_thread=False)
+        self.db.execute(DB.ENFORCE_CONSTRAINT)
+        self.db.commit()
 
     def get_connection(self) -> sqlite3.Connection:
         return self.db

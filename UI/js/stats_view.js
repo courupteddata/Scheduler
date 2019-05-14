@@ -1,6 +1,6 @@
-var stats_selected_id = "";
-var stats_start_window = "";
-var stats_end_window = "";
+let stats_selected_id = "";
+let stats_start_window = "";
+let stats_end_window = "";
 
 function stats_load() {
     $('#stats_view').load('../partials/stats_partial.html', function () {
@@ -16,7 +16,7 @@ function stats_populate_employee_list() {
 
     jQuery.get("/api/v1/entity", function (entities) {
 
-        var output = "";
+        let output = "";
 
         entities.entity.forEach(function (entity) {
             output += '<option data-tokens="' + entity.entity_name + '" value="' + entity.entity_id + '">' + entity.entity_name + '</option>';
@@ -55,8 +55,8 @@ function stats_handle_window_change() {
 }
 
 function update_table() {
-    var query = "";
-    var previous = false;
+    let query = "";
+    let previous = false;
 
     if (stats_start_window !== "") {
         query += "start=" + stats_start_window;
@@ -79,14 +79,14 @@ function update_table() {
     }
 
     jQuery.get("/api/v1/entity/" + stats_selected_id + "/location", function (locations) {
-        var labels = locations.location.reduce(function (map, obj) {
+        let labels = locations.location.reduce(function (map, obj) {
             map[obj.location_id] = obj.location_label;
             return map;
         }, {});
 
         jQuery.get("api/v1/entity/" + stats_selected_id + "/stats" + query, function (stats) {
 
-            var output = "";
+            let output = "";
 
             stats.stats.forEach(function (location) {
                 output += '<tr class="table"><td>' + location.location_id + '</td><td>' + labels[location.location_id] + '</td><td>' + location.shift_count + '</td><td>' + location.total_hours + '</td></tr>';

@@ -5,16 +5,16 @@ var stats_end_window = "";
 function stats_load() {
     $('#stats_view').load('../partials/stats_partial.html', function () {
 
-        populate_employee_list();
-        handle_employee_change();
-        handle_window_change();
+        stats_populate_employee_list();
+        stats_handle_employee_change();
+        stats_handle_window_change();
     });
 
 }
 
-function populate_employee_list() {
+function stats_populate_employee_list() {
 
-    jQuery.get("api/v1/entity", function (entities) {
+    jQuery.get("/api/v1/entity", function (entities) {
 
         var output = "";
 
@@ -28,14 +28,14 @@ function populate_employee_list() {
     });
 }
 
-function handle_employee_change() {
+function stats_handle_employee_change() {
     $("#stats_employee_select").on('changed.bs.select', function (e) {
         stats_selected_id = $(e.currentTarget).val();
         update_table();
     });
 }
 
-function handle_window_change() {
+function stats_handle_window_change() {
     $("#stats_window_start").change(function (e) {
         if (e.target.value !== "") {
             stats_start_window = new Date(e.target.value).toISOString()

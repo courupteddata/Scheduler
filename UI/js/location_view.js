@@ -2,14 +2,14 @@ function location_load() {
     $('#location_view').load('../partials/location_partial.html', function () {
 
         location_view_update();
-        setup_location_modal();
+        location_setup_modal();
 
     });
 }
 
 function location_view_update() {
 
-    jQuery.get("api/v1/location", function (locations) {
+    jQuery.get("/api/v1/location", function (locations) {
 
         var output = "";
 
@@ -26,7 +26,7 @@ function location_view_update() {
 
 }
 
-function setup_location_modal() {
+function location_setup_modal() {
     $('#location_modal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget); // Button that triggered the modal
         var purpose = button.data('purpose');
@@ -50,11 +50,11 @@ function setup_location_modal() {
             modal_loc_label_input.val(location_label);
 
             modal.find('#location_submit').off('click').click(function () {
-                update_location(location_id, modal_loc_label_input.val());
+                location_update_location(location_id, modal_loc_label_input.val());
             });
 
             modal_delete.off('click').click( function() {
-                delete_location(location_id);
+                location_delete_location(location_id);
             });
 
         } else {
@@ -62,7 +62,7 @@ function setup_location_modal() {
 
             modal_loc_id_form.hide();
             modal.find('#location_submit').off('click').click(function () {
-                create_location(modal_loc_label_input.val());
+                location_create_location(modal_loc_label_input.val());
             });
             modal_loc_label_input.val("");
         }
@@ -70,7 +70,7 @@ function setup_location_modal() {
     })
 }
 
-function update_location(location_id, location_label) {
+function location_update_location(location_id, location_label) {
     console.log(location_id, location_label);
     $.ajax({
         url: '/api/v1/location/' + location_id,
@@ -84,7 +84,7 @@ function update_location(location_id, location_label) {
     });
 }
 
-function create_location(location_label) {
+function location_create_location(location_label) {
     $.ajax({
         url: '/api/v1/location',
         type: 'POST',
@@ -97,7 +97,7 @@ function create_location(location_label) {
     });
 }
 
-function delete_location(location_id) {
+function location_delete_location(location_id) {
     $.ajax({
         url: '/api/v1/location/' + location_id,
         type: 'DELETE',

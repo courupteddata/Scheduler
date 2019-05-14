@@ -135,11 +135,12 @@ class EntityManager:
         if len(locations) == 0:
             return []
 
-        data = [self.connection.execute('SELECT id,label FROM location '
-                                        'WHERE id=?;', loc).fetchone() for loc in locations]
+        data = []
 
-        if data is None:
-            return []
+        for loc in locations:
+            temp = self.connection.execute('SELECT id,label FROM location WHERE id=?;', loc).fetchone()
+            if temp is not None:
+                data.append(temp)
 
         return [{"location_id": item[0], "location_label": item[1]} for item in data]
 

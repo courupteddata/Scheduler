@@ -1,4 +1,5 @@
 const employee_REQUIREMENT_TEMP = "TEMP"; //Only stored locally
+const employee_REQUIREMENT_TEMP_IGNORE = "IGNORE"; //Ignore locally stored requirement
 const employee_REQUIREMENT_SERVER = "SERVER"; //From the database, unchanged
 const employee_REQUIREMENT_DELETE = "DELETE"; //Marked for deletion
 
@@ -64,6 +65,7 @@ function employee_setup_modal() {
         let modal_requirement_view = modal.find("#employee_requirement_partial");
 
         let modal_requirement_table = modal.find("#employee_requirement_table_body");
+        modal_requirement_table.empty();
         let modal_requirement_list = [];
 
         //Update title of the modal depending on the purpose
@@ -78,6 +80,8 @@ function employee_setup_modal() {
                     let temp = requirement_get_submit_data(modal_requirement_selected_id, modal_requirement_view);
                     temp["state"] = employee_REQUIREMENT_TEMP;
                     modal_requirement_list.push(temp);
+                    employee_refresh_requirements_list(modal_requirement_table, modal_requirement_list, modal_requirement_type_select, modal_requirement_view);
+                    modal_requirement_view.empty();
                 },
                 function () {
                     modal_requirement_type_select.val('').selectpicker('refresh');
@@ -91,32 +95,10 @@ function employee_setup_modal() {
 
             requirement_get_requirements(entity_id, function (data) {
                 data.forEach(function (item) {
+                    item["state"] = employee_REQUIREMENT_SERVER;
                     modal_requirement_list.push(item);
                 });
-                employee_refresh_requirements_list(modal_requirement_table, modal_requirement_list, function (event) {
-                    let edit_button = $(event.relatedTarget);
-                    let data_index = edit_button.data("requirementIndex");
-                    let data = modal_requirement_list[data_index];
-
-                    requirement_load_partial_with_data(modal_requirement_view, data ,
-                        function () {
-                            let temp = requirement_get_submit_data(requirement_get_type_number(data), modal_requirement_view);
-
-                            if(data["state"] === employee_REQUIREMENT_SERVER ) {
-                                modal_requirement_list[data_index]["state"] = employee_REQUIREMENT_DELETE;
-                            }
-                            temp["state"] = employee_REQUIREMENT_TEMP;
-                            modal_requirement_list.push(temp);
-                            modal_requirement_view.empty();
-                        },
-                        function () {
-                            modal_requirement_type_select.val('').selectpicker('refresh');
-                            modal_requirement_view.empty()
-                        }, function () {
-
-                            modal_requirement_view.empty();
-                        })
-                });
+                employee_refresh_requirements_list(modal_requirement_table, modal_requirement_list, modal_requirement_type_select, modal_requirement_view);
             });
 
             //Show employee id
@@ -133,7 +115,7 @@ function employee_setup_modal() {
                 if (new_name !== entity_name) {
                     employee_update_name(entity_id, new_name);
                 }
-
+                employee_handle_requirement_list(entity_id, modal_requirement_list);
                 employee_update_location(entity_id, selected_values, modal_employee_original_location_set)
             });
 
@@ -143,17 +125,18 @@ function employee_setup_modal() {
 
         } else {
             modal_delete.hide();
+            modal_entity_name_input.val("");
 
             modal_entity_id_form.hide();
             modal.find('#employee_submit').off('click').click(function () {
                 let selected_values = new Set(modal_location_select.val());
 
                 employee_create_one(modal_entity_name_input.val(), function (created_id) {
-                    employee_update_location(created_id, selected_values, modal_employee_original_location_set)
+                    employee_update_location(created_id, selected_values, modal_employee_original_location_set);
+                    employee_handle_requirement_list(created_id, modal_requirement_list);
                 });
-                //location_create_location(modal_loc_label_input.val());
+
             });
-            //modal_loc_label_input.val("");
         }
 
 
@@ -208,15 +191,23 @@ function employee_delete_one(entity_id) {
     });
 }
 
-function employee_add_requirements(entity_id, requirement_to_add) {
-    for (item of requirement_to_add) {
+function employee_handle_requirement_list(entity_id, requirements_list) {
+    requirements_list.forEach(function(data){
+       if(data["state"] === employee_REQUIREMENT_DELETE){
+           employee_delete_requirement(data["data"]["requirement_id"]);
+       } else if(data["state"] === employee_REQUIREMENT_TEMP){
+           employee_add_requirement(entity_id, data);
+       }
+    });
+}
+
+function employee_add_requirement(entity_id, requirement_to_add) {
         $.ajax({
             url: '/api/v1/entity/' + entity_id + '/requirement',
             type: 'POST',
             contentType: 'application/json;charset=UTF-8',
-            data: JSON.stringify(item)
+            data: JSON.stringify(requirement_to_add)
         });
-    }
 }
 
 function employee_delete_requirement(requirement_id) {
@@ -263,15 +254,54 @@ function employee_update_name(entity_id, new_name) {
     });
 }
 
-function employee_refresh_requirements_list(element, requirements_list, onlick) {
+function employee_refresh_requirements_list(element, requirements_list, type_select, requirement_view) {
+    employee_refresh_requirement_table(element, requirements_list);
+
+    element.find('.fake-requirement-class').off('click').on('click', function (event) {
+        let edit_button = $(event.target);
+        let data_index = edit_button.data("requirementIndex");
+        let data = requirements_list[data_index];
+
+        type_select.val('').selectpicker('refresh');
+
+        requirement_load_partial_with_data(requirement_view, data,
+            function () {
+                let temp = requirement_get_submit_data(requirement_get_type_number(data), requirement_view);
+
+                if (data["state"] === employee_REQUIREMENT_SERVER) {
+                    requirements_list[data_index]["state"] = employee_REQUIREMENT_DELETE;
+                }
+                if (data["state"] === employee_REQUIREMENT_TEMP) {
+                    requirements_list[data_index]["state"] = employee_REQUIREMENT_TEMP_IGNORE;
+                }
+                temp["state"] = employee_REQUIREMENT_TEMP;
+                requirements_list.push(temp);
+                requirement_view.empty();
+                employee_refresh_requirement_table(element, requirements_list);
+            },
+            function () {
+                requirement_view.empty()
+            },
+            function () {
+                if (data["state"] === employee_REQUIREMENT_SERVER) {
+                    requirements_list[data_index]["state"] = employee_REQUIREMENT_DELETE;
+                } else if (data["state"] === employee_REQUIREMENT_TEMP) {
+                    requirements_list[data_index]["state"] = employee_REQUIREMENT_TEMP_IGNORE;
+                }
+                requirement_view.empty();
+                employee_refresh_requirement_table(element, requirements_list);
+            })
+    });
+}
+
+function employee_refresh_requirement_table(element, requirements_list) {
     let output = "";
 
     requirements_list.forEach(function (data, index) {
-
-        if (data.state !== employee_REQUIREMENT_DELETE) {
+        if (data.state !== employee_REQUIREMENT_DELETE && data.state !== employee_REQUIREMENT_TEMP_IGNORE) {
             output += '<tr><td>' + data.data.label + '</td><td><button class="btn btn-primary fake-requirement-class"  data-requirement-index="' + index + '">Edit</button></td></tr>';
         }
-    });
 
-    requirements_list.find(".fake-requirement-class").off('click').on('click', onlick);
+    });
+    element.empty().append(output);
 }

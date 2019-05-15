@@ -64,7 +64,7 @@ class Scheduler:
             current_cost_limit += self.step_size
             shifts = self.shift_manager.get_empty_shift_by_location_id(location_id)
             num_empty_shifts = self.shift_manager.get_empty_shift_count_by_location_id(location_id)
-            self.work_manager.update_work_entry(work_id, num_empty_shifts/starting_empty,
+            self.work_manager.update_work_entry(work_id, num_empty_shifts/starting_empty * 100,
                                                 f"Still working... There are still {num_empty_shifts} "
                                                 f"empty shifts for location: {location_name}.")
 

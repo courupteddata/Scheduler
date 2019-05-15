@@ -111,11 +111,6 @@ function requirement_load_partial(destination, requirement_type_number, submit_h
     destination.empty().load(requirement_types[requirement_type_number].partial, function () {
         let partial = $(this);
 
-        if (data !== undefined) {
-            for (let form_data of requirement_types[requirement_type_number]["id_map"]) {
-                partial.find("#" + form_data["form_id"]).val(data[form_data["data_id"]]);
-            }
-        }
 
         if (delete_handler === undefined) {
             partial.find("#requirement_delete").hide();
@@ -178,7 +173,7 @@ function requirement_get_requirements(entity_id, success_callback) {
         type: 'GET',
         contentType: 'application/json;charset=UTF-8',
     }).done(function (data) {
-        success_callback(data);
+        success_callback(data["requirement"]);
     });
 
 }

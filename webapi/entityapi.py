@@ -102,7 +102,7 @@ def entity_requirement_get(entity_id: int):
 
     return jsonify({"requirement": [{"requirement_id": entry[0],
                                      "requirement_type": entry[1],
-                                     "requirement_data": entry[2].serialize()} for entry in data]})
+                                     "data": entry[2].serialize()} for entry in data]})
 
 
 @entity_api.route("/entity/<int:entity_id>/requirement", methods=['POST'])
@@ -130,12 +130,17 @@ def entity_requirement_post(entity_id: int):
         return jsonify({"error": "missing cost field"}), 400
     cost = data["data"]["cost"]
 
+    try:
+        cost = float(cost)
+    except ValueError:
+        return jsonify({"error": "cost needs to be a number"}), 400
+
     if "label" not in data["data"]:
         return jsonify({"error": "missing label field"}), 400
     label = data["data"]["label"]
 
     if data["requirement_type"] == requirementhelper.RequirementType.BASE.name:
-        requirement = entityrequirement.EntityRequirement(cost, label)
+        requirement = entityrequirement.EntityRequirement(label, cost)
     elif data["requirement_type"] == requirementhelper.RequirementType.TIMEFRAME.name:
         time_frame_types = [entityrequirement.TimeFrameRequirement.Types.DATE_RANGE.name,
                             entityrequirement.TimeFrameRequirement.Types.DAY_OF_WEEK.name,

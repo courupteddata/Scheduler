@@ -2,8 +2,6 @@ let employee_requirements_to_add = [];
 
 let employee_delete_requirement_ids = new Set();
 
-let employee_name_change = false;
-let employee_updated_name = "";
 
 function employee_load() {
 
@@ -46,7 +44,8 @@ function employee_setup_modal() {
         modal.find("#employee_requirement_partial").empty();
         modal.find("#employee_requirement_type_select").val('').selectpicker('refresh');
 
-        let modal_employee_location_set = new Set();
+        //
+        let modal_employee_original_location_set = new Set();
 
         //ID and Nome field
         let modal_entity_id_form = modal.find('#employee_id_field');
@@ -58,7 +57,7 @@ function employee_setup_modal() {
 
         //Location section
         let modal_location_select = modal.find("#employee_location_select");
-        employee_fill_location_modal(entity_id, modal_location_select, modal_employee_location_set);
+        employee_fill_location_modal(entity_id, modal_location_select, modal_employee_original_location_set);
 
         //Requirement section
         let modal_requirement_type_select = modal.find("#employee_requirement_type_select");
@@ -99,8 +98,13 @@ function employee_setup_modal() {
 
             modal_submit.off('click').click(function () {
                 let selected_values = new Set(modal_location_select.val());
+                let new_name = modal_entity_name_input.val();
 
-                employee_update_location(entity_id, selected_values, modal_employee_location_set)
+                if(new_name !== entity_name) {
+                    employee_update_name(entity_id, new_name);
+                }
+
+                employee_update_location(entity_id, selected_values, modal_employee_original_location_set)
             });
 
             modal_delete.off('click').click(function () {
@@ -115,7 +119,7 @@ function employee_setup_modal() {
                 let selected_values = new Set(modal_location_select.val());
 
                 employee_create_one(modal_entity_name_input.val(), function (created_id) {
-                    employee_update_location(created_id, selected_values, modal_employee_location_set)
+                    employee_update_location(created_id, selected_values, modal_employee_original_location_set)
                 });
                 //location_create_location(modal_loc_label_input.val());
             });
@@ -181,10 +185,7 @@ function employee_add_requirements(entity_id) {
             type: 'POST',
             contentType: 'application/json;charset=UTF-8',
             data: JSON.stringify(item)
-        }).always(function () {
-
         });
-
     }
 }
 
@@ -193,19 +194,12 @@ function employee_delete_requirement(requirement_id) {
         url: '/api/v1/entity/requirement/' + requirement_id,
         type: 'DELETE',
         contentType: 'application/json;charset=UTF-8',
-    }).always(function () {
-
     });
 }
 
 function employee_update_location(entity_id, selected_values, original_values) {
-    let set_of_selected_values = new Set(selected_values);
 
-    console.log(set_of_selected_values);
-    console.log(original_values);
-    console.log("------------------");
-
-    for (let selected of set_of_selected_values) {
+    for (let selected of selected_values) {
         if (!original_values.has(selected)) {
             //If selected not in original, that means we need to put it.
             $.ajax({
@@ -217,7 +211,7 @@ function employee_update_location(entity_id, selected_values, original_values) {
     }
 
     for (let original of original_values) {
-        if (!set_of_selected_values.has(original)) {
+        if (!selected_values.has(original)) {
             //If original not in selected, that means we need to delete it.
             $.ajax({
                 url: '/api/v1/location/' + original + '/entity/' + entity_id,
@@ -226,4 +220,15 @@ function employee_update_location(entity_id, selected_values, original_values) {
             });
         }
     }
+}
+
+function employee_update_name(entity_id, new_name) {
+    $.ajax({
+        url: '/api/v1/entity/' + entity_id,
+        type: 'PUT',
+        contentType: 'application/json;charset=UTF-8',
+        data: JSON.stringify({"entity_name": new_name})
+    }).done(function () {
+        employee_update_table();
+    });
 }

@@ -21,8 +21,10 @@ from typing import List, Dict, Union
 import math
 from dateutil import parser
 import copy
+from threading import Lock
 
 from . import shared
+
 
 #  Model everything as a list of shifts that can be on or off.
 
@@ -76,27 +78,31 @@ class ShiftManager:
     def __init__(self):
         shared.DB.create_all_tables()
         self.connection = shared.DB().get_connection()
+        self.connection_modify_lock = Lock()
 
     def add_shift(self, shift: Shift) -> int:
-        last_row_id = self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
-                                              "VALUES (?,?,?,?,?)",
-                                              (shift.start.isoformat(), shift.end.isoformat(),
-                                               shift.info, shift.entity_id, shift.location_id)).lastrowid
-        self.connection.commit()
+        with self.connection_modify_lock:
+            last_row_id = self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
+                                                  "VALUES (?,?,?,?,?)",
+                                                  (shift.start.isoformat(), shift.end.isoformat(),
+                                                   shift.info, shift.entity_id, shift.location_id)).lastrowid
+            self.connection.commit()
         return last_row_id
 
     def delete_shift(self, shift_id: int) -> int:
-        modified_row_count = self.connection.execute("DELETE FROM shift WHERE id=?", (shift_id,)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute("DELETE FROM shift WHERE id=?", (shift_id,)).rowcount
+            self.connection.commit()
 
         return modified_row_count
 
     def update_shift(self, shift: Shift) -> int:
-        modified_row_count = self.connection.execute("UPDATE shift SET start=?,end=?,info=?,entity_id=?,location_id=? "
-                                                     "WHERE id=?",
-                                                     (shift.start.isoformat(), shift.end.isoformat(), shift.info,
-                                                      shift.entity_id, shift.location_id)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute("UPDATE shift SET start=?,end=?,info=?,entity_id=?,"
+                                                         "location_id=? WHERE id=?",
+                                                         (shift.start.isoformat(), shift.end.isoformat(), shift.info,
+                                                          shift.entity_id, shift.location_id)).rowcount
+            self.connection.commit()
         return modified_row_count
 
     def get_shift_by_id(self, shift_id: int) -> Union[None, Shift]:
@@ -109,7 +115,8 @@ class ShiftManager:
         return Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]), info=data[3],
                      entity_id=data[4], location_id=data[5])
 
-    def update_parts_of_shift(self, shift_id: int, start: datetime = None, end: datetime = None, location_id: int = None, info: str = None, entity_id: int = None) -> Union[None, Shift]:
+    def update_parts_of_shift(self, shift_id: int, start: datetime = None, end: datetime = None,
+                              location_id: int = None, info: str = None, entity_id: int = None) -> Union[None, Shift]:
         if self.get_shift_by_id(shift_id) is None:
             return None
 
@@ -151,17 +158,19 @@ class ShiftManager:
             set_string = " SET " + set_string
             query_params += (shift_id,)
 
-            self.connection.execute(f"UPDATE shift {set_string} WHERE id=?;", query_params)
-            self.connection.commit()
+            with self.connection_modify_lock:
+                self.connection.execute(f"UPDATE shift {set_string} WHERE id=?;", query_params)
+                self.connection.commit()
 
             return self.get_shift_by_id(shift_id)
 
         return None
 
     def fill_shift_by_id(self, shift_id: int, entity_id: int) -> int:
-        modified_row_count = self.connection.execute("UPDATE shift SET entity_id=? WHERE id=?",
-                                                     (entity_id, shift_id)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute("UPDATE shift SET entity_id=? WHERE id=?",
+                                                         (entity_id, shift_id)).rowcount
+            self.connection.commit()
         return modified_row_count
 
     def get_shift_by_location_id(self, location_id: int = -1,
@@ -258,7 +267,7 @@ class ShiftManager:
         """
         length = (end - start).total_seconds()
         seconds_in_a_week = 604800
-        week_offset = length/seconds_in_a_week
+        week_offset = length / seconds_in_a_week
         days_offset = math.ceil(week_offset) * 7
 
         shift_offset_increment = timedelta(days=days_offset)
@@ -269,7 +278,7 @@ class ShiftManager:
         while working:
             for day in week:
                 for shift in day:
-                    if shift.end+shift_offset > end:
+                    if shift.end + shift_offset > end:
                         working = False
                         break
                     a_copy = copy.deepcopy(shift)
@@ -279,12 +288,13 @@ class ShiftManager:
             shift_offset = shift_offset + shift_offset_increment
         count = 0
 
-        for shift in shifts:
-            count += self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
-                                             "VALUES (?,?,?,?,?)",
-                                             (shift.start.isoformat(), shift.end.isoformat(), shift.info,
-                                              shift.entity_id, shift.location_id)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            for shift in shifts:
+                count += self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
+                                                 "VALUES (?,?,?,?,?)",
+                                                 (shift.start.isoformat(), shift.end.isoformat(), shift.info,
+                                                  shift.entity_id, shift.location_id)).rowcount
+            self.connection.commit()
 
         return count
 
@@ -314,12 +324,13 @@ class ShiftManager:
 
         count = 0
 
-        for shift in shifts:
-            count += self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
-                                             "VALUES (?,?,?,?,?)",
-                                             (shift.start.isoformat(), shift.end.isoformat(), shift.info,
-                                              shift.entity_id, shift.location_id)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            for shift in shifts:
+                count += self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
+                                                 "VALUES (?,?,?,?,?)",
+                                                 (shift.start.isoformat(), shift.end.isoformat(), shift.info,
+                                                  shift.entity_id, shift.location_id)).rowcount
+            self.connection.commit()
 
         return count
 

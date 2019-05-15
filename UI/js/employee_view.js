@@ -1,8 +1,3 @@
-let employee_requirement_types = [];
-
-let employee_original_location_ids = new Set();
-let employee_updated_location_ids = new Set();
-
 let employee_requirements_to_add = [];
 
 let employee_delete_requirement_ids = new Set();
@@ -47,25 +42,36 @@ function employee_setup_modal() {
 
         let modal = $(this);
 
-        modal.find('#employee_modal_label').text(purpose + ' Employee');
+        //Reset the view
+        modal.find("#employee_requirement_partial").empty();
+        modal.find("#employee_requirement_type_select").val('').selectpicker('refresh');
 
+        let modal_employee_location_set = new Set();
+
+        //ID and Nome field
         let modal_entity_id_form = modal.find('#employee_id_field');
         let modal_entity_name_input = modal.find('#employee_name_field');
 
+        //Two Buttons
         let modal_submit = modal.find("#employee_submit");
         let modal_delete = modal.find('#employee_delete');
 
+        //Location section
         let modal_location_select = modal.find("#employee_location_select");
-        employee_fill_location_modal(entity_id, modal_location_select);
+        employee_fill_location_modal(entity_id, modal_location_select, modal_employee_location_set);
 
+        //Requirement section
         let modal_requirement_type_select = modal.find("#employee_requirement_type_select");
-
         let modal_requirement_view = modal.find("#employee_requirement_partial");
 
-
+        //Clear requirements
         employee_requirements_to_add = [];
 
+        //Update title of the modal depending on the purpose
+        modal.find('#employee_modal_label').text(purpose + ' Employee');
 
+
+        //Basic requirement select functionality
         modal_requirement_type_select.off("changed.bs.select").selectpicker('refresh').on('changed.bs.select', function (e) {
             let modal_requirement_selected_id = $(e.currentTarget).val();
             requirement_load_partial(modal_requirement_view, modal_requirement_selected_id,
@@ -84,17 +90,21 @@ function employee_setup_modal() {
         if (purpose === "Edit") {
             modal_delete.show();
 
+            //Show employee id
             modal_entity_id_form.show();
             modal_entity_id_form.find('#employee_id_input').val(entity_id);
 
+            //Update name
             modal_entity_name_input.val(entity_name);
 
             modal_submit.off('click').click(function () {
-                //location_update_location(location_id, modal_loc_label_input.val());
+                let selected_values = new Set(modal_location_select.val());
+
+                employee_update_location(entity_id, selected_values, modal_employee_location_set)
             });
 
             modal_delete.off('click').click(function () {
-                //location_delete_location(location_id);
+                employee_delete_one(entity_id);
             });
 
         } else {
@@ -102,7 +112,11 @@ function employee_setup_modal() {
 
             modal_entity_id_form.hide();
             modal.find('#employee_submit').off('click').click(function () {
-                employee_create_one(modal_entity_name_input.val());
+                let selected_values = new Set(modal_location_select.val());
+
+                employee_create_one(modal_entity_name_input.val(), function (created_id) {
+                    employee_update_location(created_id, selected_values, modal_employee_location_set)
+                });
                 //location_create_location(modal_loc_label_input.val());
             });
             //modal_loc_label_input.val("");
@@ -110,20 +124,10 @@ function employee_setup_modal() {
 
 
     });
-
-    employee_modal.on('hide.bs.modal', function () {
-        let modal = $(this);
-        modal.find("#employee_requirement_partial").empty();
-
-        modal.find("#employee_requirement_type_select").val('').selectpicker('refresh');
-    });
 }
 
-function employee_fill_location_modal(entity_id, select_element) {
+function employee_fill_location_modal(entity_id, select_element, original_location_ids) {
     select_element.empty();
-
-    employee_original_location_ids.clear();
-    employee_updated_location_ids.clear();
 
     jQuery.get("/api/v1/location", function (locations) {
         let output = "";
@@ -136,32 +140,38 @@ function employee_fill_location_modal(entity_id, select_element) {
 
         jQuery.get("/api/v1/entity/" + entity_id + "/location", function (locations) {
             locations.location.forEach(function (location) {
-                employee_original_location_ids.add(location.location_id)
+                original_location_ids.add('' + location.location_id)
             });
-            select_element.selectpicker('val', Array.from(employee_original_location_ids));
+            select_element.selectpicker('val', Array.from(original_location_ids));
         });
 
     });
 
 }
 
-function employee_update_one(entity_id, name) {
-
-}
-
-function employee_create_one(name) {
+function employee_create_one(name, success_callback) {
     $.ajax({
         url: '/api/v1/entity',
         type: 'POST',
         contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify({"entity_name": name})
-    }).always(function () {
-        employee_update_table();
-    });
+    })
+        .done(function (data) {
+            success_callback(data.entity_id);
+        })
+        .always(function () {
+            employee_update_table();
+        });
 }
 
 function employee_delete_one(entity_id) {
-
+    $.ajax({
+        url: '/api/v1/entity/' + entity_id,
+        type: 'DELETE',
+        contentType: 'application/json;charset=UTF-8',
+    }).always(function () {
+        employee_update_table();
+    });
 }
 
 function employee_add_requirements(entity_id) {
@@ -186,4 +196,34 @@ function employee_delete_requirement(requirement_id) {
     }).always(function () {
 
     });
+}
+
+function employee_update_location(entity_id, selected_values, original_values) {
+    let set_of_selected_values = new Set(selected_values);
+
+    console.log(set_of_selected_values);
+    console.log(original_values);
+    console.log("------------------");
+
+    for (let selected of set_of_selected_values) {
+        if (!original_values.has(selected)) {
+            //If selected not in original, that means we need to put it.
+            $.ajax({
+                url: '/api/v1/location/' + selected + '/entity/' + entity_id,
+                type: 'PUT',
+                contentType: 'application/json;charset=UTF-8',
+            });
+        }
+    }
+
+    for (let original of original_values) {
+        if (!set_of_selected_values.has(original)) {
+            //If original not in selected, that means we need to delete it.
+            $.ajax({
+                url: '/api/v1/location/' + original + '/entity/' + entity_id,
+                type: 'DELETE',
+                contentType: 'application/json;charset=UTF-8',
+            });
+        }
+    }
 }

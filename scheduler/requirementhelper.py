@@ -25,6 +25,7 @@ import json
 
 if TYPE_CHECKING:
     import sqlite3
+    from threading import Lock
 
 
 class RequirementType(Enum):
@@ -73,7 +74,8 @@ def rebuild_from_data(req_type: str, json_data: str, requirement_id: int = -1) -
 
 def store_requirement(db_connection: 'sqlite3.Connection',
                       entity_id: int,
-                      requirement: entityrequirement.EntityRequirement) -> int:
+                      requirement: entityrequirement.EntityRequirement,
+                      modify_lock: 'Lock') -> int:
 
     requirement_type = RequirementType.BASE
 
@@ -89,10 +91,11 @@ def store_requirement(db_connection: 'sqlite3.Connection',
     else:
         data = requirement.serialize()
 
-    updated_row = db_connection.execute("INSERT INTO requirement(entity_id, type, json_data) VALUES (?, ?, ?);",
-                                        (entity_id, requirement_type.name, json.dumps(data))).lastrowid
+    with modify_lock:
+        updated_row = db_connection.execute("INSERT INTO requirement(entity_id, type, json_data) VALUES (?, ?, ?);",
+                                            (entity_id, requirement_type.name, json.dumps(data))).lastrowid
 
-    db_connection.commit()
+        db_connection.commit()
 
     return updated_row
 

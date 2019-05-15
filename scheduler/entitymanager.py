@@ -19,6 +19,7 @@
 from typing import Tuple, Union, List, TYPE_CHECKING, Dict
 from . import shared, entitystate
 from datetime import datetime
+from threading import Lock
 
 from . import entity, requirementhelper
 
@@ -32,22 +33,26 @@ class EntityManager:
     def __init__(self):
         self.connection = shared.DB().get_connection()
         shared.DB.create_all_tables()
+        self.connection_modify_lock = Lock()
 
     def create_entity(self, name: str) -> int:
-        inserted_id = self.connection.execute('INSERT INTO entity(name) VALUES (?);', (name,)).lastrowid
-        self.connection.commit()
+        with self.connection_modify_lock:
+            inserted_id = self.connection.execute('INSERT INTO entity(name) VALUES (?);', (name,)).lastrowid
+            self.connection.commit()
 
         return inserted_id
 
     def update_entity_name(self, entity_id: int, name: str):
-        modified_row_count = self.connection.execute('UPDATE entity SET name=? WHERE id=?;', (name, entity_id)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute('UPDATE entity SET name=? WHERE id=?;', (name, entity_id)).rowcount
+            self.connection.commit()
 
         return modified_row_count
 
     def delete_entity(self, entity_id: int) -> bool:
-        modified_row_count = self.connection.execute('DELETE FROM entity WHERE id=?;', (entity_id,)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute('DELETE FROM entity WHERE id=?;', (entity_id,)).rowcount
+            self.connection.commit()
 
         return modified_row_count > 0
 
@@ -96,16 +101,17 @@ class EntityManager:
     Requirement management of an entity
     """
     def add_requirement_to_entity(self, entity_id: int, requirement: 'entityrequirement.EntityRequirement') -> int:
-        return requirementhelper.store_requirement(self.connection, entity_id, requirement)
+        return requirementhelper.store_requirement(self.connection, entity_id, requirement, self.connection_modify_lock)
 
     def delete_requirement(self, requirement_id: Union[int, List[int]]) -> int:
 
-        if isinstance(requirement_id, list):
-            to_return = self.connection.executemany("DELETE FROM requirement WHERE id=?", requirement_id).rowcount
-        else:
-            to_return = self.connection.execute("DELETE FROM requirement WHERE id=?", (requirement_id,)).rowcount
+        with self.connection_modify_lock:
+            if isinstance(requirement_id, list):
+                to_return = self.connection.executemany("DELETE FROM requirement WHERE id=?", requirement_id).rowcount
+            else:
+                to_return = self.connection.execute("DELETE FROM requirement WHERE id=?", (requirement_id,)).rowcount
+            self.connection.commit()
 
-        self.connection.commit()
         return to_return
 
     def get_requirements_for_entity(self, entity_id: int) -> \

@@ -63,7 +63,9 @@ const requirement_types = {
         "id_map": [
             {"form_id": "requirement_cost", "data_id": "cost"},
             {"form_id": "requirement_label", "data_id": "label"},
+
             {"form_id": "requirement_total_requirement", "data_id": "total_requirement"},
+
             {"form_id": "requirement_scale", "data_id": "scale"},
             {"form_id": "requirement_is_rolling", "data_id": "is_rolling"},
             {"form_id": "requirement_start_datetime", "data_id": "start"},
@@ -76,7 +78,8 @@ const requirement_types = {
 
         ],
         "const_data": [],
-        "requirement_type": "TOTALS"
+        "requirement_type": "TOTALS",
+        "partial": "/partials/requirement_partial/requirement_totals.html"
     }
 };
 
@@ -144,15 +147,17 @@ function requirement_load_partial_with_data(destination, data, submit_handler, c
             for (let form_data of requirement_types[requirement_type_number]["id_map"]) {
                 if (form_data["form_id"].includes("datetime")) {
                     //Handle special case of datetime
-                    $("#" + form_data["form_id"]).datetimepicker({"date": moment(new Date(data.data[form_data["data_id"]]))});
+                    if (requirement_type_number !== 6) {
+                        $("#" + form_data["form_id"], partial).datetimepicker({"date": moment(new Date(data.data[form_data["data_id"]]))});
+                    }
                 } else if (form_data["form_id"].includes("time")) {
                     //Handle special case of just time
-                    $("#" + form_data["form_id"]).datetimepicker({
+                    $("#" + form_data["form_id"], partial).datetimepicker({
                         "date": (new Date()).toDateString() + " " + data.data[form_data["data_id"]],
                         "format": "LT"
                     });
                 } else {
-                    if(form_data["data_id"] !== "during" && form_data["data_id"] !== "after") {
+                    if (form_data["data_id"] !== "during" && form_data["data_id"] !== "after" && form_data["data_id"] !== "scale" && form_data["data_id"] !== "is_rolling") {
                         partial.find("#" + form_data["form_id"]).val('' + data.data[form_data["data_id"]]);
                     }
                 }
@@ -165,6 +170,26 @@ function requirement_load_partial_with_data(destination, data, submit_handler, c
                     partial.find('input:radio[name=inlineRadioOptions][value=during]').trigger('click');
                 } else {
                     partial.find('input:radio[name=inlineRadioOptions][value=after]').trigger('click');
+                }
+            } else if (requirement_type_number === 6) {
+                //is_rolling, scale checkboxes
+                //is_rolling true then there is length
+                //start, end
+
+                $("#requirement_is_rolling", partial).prop("checked", data.data["is_rolling"]);
+                $("#requirement_scale", partial).prop("checked", data.data["scale"]);
+                let start = moment(new Date(data.data["start"]));
+
+                $("#requirement_start_datetime", partial).datetimepicker({"date": start});
+
+                if (data.data["is_rolling"] === true) {
+                    let temp_end = start.add(Number(data.data["length"]), 'hours');
+
+                    console.log(temp_end);
+
+                    $("#requirement_end_datetime", partial).datetimepicker({"date": temp_end});
+                } else {
+                    $("#requirement_end_datetime", partial).datetimepicker({"date": moment(new Date(data.data["end"]))});
                 }
             }
         }
@@ -218,9 +243,21 @@ function requirement_get_submit_data(requirement_type_number, element) {
         data.data["after"] = !is_during;
     }
 
+    if (requirement_type_number === 6) {
+         let start = moment(new Date(data.data["start"]));
+         let end = moment(new Date(data.data["end"]));
+
+         data.data["scale"] = element.find("#requirement_scale").is(":checked") === true;
+         data.data["is_rolling"] = element.find("#requirement_is_rolling").is(":checked") === true;
+
+         if(data.data["is_rolling"]) {
+            data.data["length"] = moment.duration(end.diff(start)).asHours();
+         }
+    }
+    console.log("Getting Data:");
+    console.log(data);
 
     return data;
-
 }
 
 function requirement_get_requirements(entity_id, success_callback) {

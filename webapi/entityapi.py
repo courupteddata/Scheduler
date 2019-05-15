@@ -197,12 +197,12 @@ def entity_requirement_post(entity_id: int):
 
         if "length" not in data["data"] and data["data"]["is_rolling"]:
             error_message += "Missing length (float, hours) "
-        else:
+        elif not data["data"]["is_rolling"]:
             data["data"]["length"] = 0
 
         if "end" not in data["data"] and not data["data"]["is_rolling"]:
             error_message += "Missing end (ISO8601 datetime format)"
-        else:
+        elif data["data"]["is_rolling"]:
             data["data"]["end"] = "0001-01-01T00:00:00"
 
         if error_message != "":

@@ -30,7 +30,8 @@ const requirement_types = {
         "const_data": [
             {"data": "DAY_OF_WEEK", "data_id": "time_frame_type"}
         ],
-        "requirement_type": "TIMEFRAME"
+        "requirement_type": "TIMEFRAME",
+        "partial": "/partials/requirement_partial/requirement_timeframe_day_of_week.html"
     },
     4: {
         "id_map": [
@@ -117,6 +118,10 @@ function requirement_load_partial(destination, requirement_type_number, submit_h
             partial.find("#requirement_delete").off('click').on('click', delete_handler);
         }
 
+        if (requirement_type_number == 3) {
+            partial.find("#requirement_day_of_week_select").val('').selectpicker('refresh');
+        }
+
         partial.find("#requirement_cancel").off('click').on('click', cancel_handler);
         partial.find("#requirement_submit").off('click').on('click', submit_handler);
     });
@@ -135,11 +140,15 @@ function requirement_load_partial_with_data(destination, data, submit_handler, c
                     $("#" + form_data["form_id"]).datetimepicker({"date": moment(new Date(data.data[form_data["data_id"]]))});
                 } else if (form_data["form_id"].includes("time")) {
                     //Handle special case of just time
-                    partial.find("#" + form_data["form_id"]).setValue(moment(new Date(data.data[form_data["data_id"]])).format('h:mm:ss a'));
+                    $("#" + form_data["form_id"]).datetimepicker({"time": moment(new Date(data.data[form_data["data_id"]])).time12});
                 } else {
-                    partial.find("#" + form_data["form_id"]).val(data.data[form_data["data_id"]]);
+                    partial.find("#" + form_data["form_id"]).val('' + data.data[form_data["data_id"]]);
                 }
             }
+        }
+
+        if (requirement_type_number === 3) {
+            partial.find("#requirement_day_of_week_select").selectpicker('val', '' + data.data["day_of_week"]);
         }
 
         if (delete_handler === undefined) {

@@ -111,7 +111,6 @@ function requirement_load_partial(destination, requirement_type_number, submit_h
     destination.empty().load(requirement_types[requirement_type_number].partial, function () {
         let partial = $(this);
 
-
         if (delete_handler === undefined) {
             partial.find("#requirement_delete").hide();
         } else {
@@ -131,7 +130,15 @@ function requirement_load_partial_with_data(destination, data, submit_handler, c
 
         if (data !== undefined) {
             for (let form_data of requirement_types[requirement_type_number]["id_map"]) {
-                partial.find("#" + form_data["form_id"]).val(data.data[form_data["data_id"]]);
+                if (form_data["form_id"].includes("datetime")) {
+                    //Handle special case of datetime
+                    $("#" + form_data["form_id"]).datetimepicker({"date": moment(new Date(data.data[form_data["data_id"]]))});
+                } else if (form_data["form_id"].includes("time")) {
+                    //Handle special case of just time
+                    partial.find("#" + form_data["form_id"]).setValue(moment(new Date(data.data[form_data["data_id"]])).format('h:mm:ss a'));
+                } else {
+                    partial.find("#" + form_data["form_id"]).val(data.data[form_data["data_id"]]);
+                }
             }
         }
 
@@ -161,7 +168,16 @@ function requirement_get_submit_data(requirement_type_number, element) {
 
     if (requirement_type_number >= 1 && requirement_type_number <= 4) {
         for (let form_data of requirement_template["id_map"]) {
-            data.data[form_data["data_id"]] = element.find("#" + form_data["form_id"]).val();
+            let temp_data = element.find("#" + form_data["form_id"]).val();
+
+            if (temp_data === undefined) {
+                data.data[form_data["data_id"]] = temp_data;
+            } else if (form_data["form_id"].includes("time")) {
+                //Handle special case of datetime or time
+                data.data[form_data["data_id"]] = (new Date(temp_data)).toISOString();
+            } else {
+                data.data[form_data["data_id"]] = temp_data;
+            }
         }
         return data;
     }

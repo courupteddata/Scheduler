@@ -107,18 +107,52 @@ function requirement_get_type_number(requirement) {
     }
 }
 
-function requirement_load_partial(destination, requirement_type_number, submit_handler, cancel_handler, delete_handler){
-    destination.empty().load(requirement_types[requirement_type_number].partial, function (){
+function requirement_load_partial(destination, requirement_type_number, submit_handler, cancel_handler, delete_handler) {
+    destination.empty().load(requirement_types[requirement_type_number].partial, function () {
         let partial = $(this);
 
-        partial.find("#requirement_delete").off('click').on('click', delete_handler);
+        if (data !== undefined) {
+            for (let form_data of requirement_types[requirement_type_number]["id_map"]) {
+                partial.find("#" + form_data["form_id"]).val(data[form_data["data_id"]]);
+            }
+        }
+
+        if (delete_handler === undefined) {
+            partial.find("#requirement_delete").hide();
+        } else {
+            partial.find("#requirement_delete").off('click').on('click', delete_handler);
+        }
+
         partial.find("#requirement_cancel").off('click').on('click', cancel_handler);
         partial.find("#requirement_submit").off('click').on('click', submit_handler);
     });
 }
 
-function requirement_submit_data(requirement_type_number, element){
-    let requirement_template =  requirement_types[requirement_type_number];
+function requirement_load_partial_with_data(destination, data, submit_handler, cancel_handler, delete_handler) {
+    let requirement_type_number = requirement_get_type_number(data);
+
+    destination.empty().load(requirement_types[requirement_type_number].partial, function () {
+        let partial = $(this);
+
+        if (data !== undefined) {
+            for (let form_data of requirement_types[requirement_type_number]["id_map"]) {
+                partial.find("#" + form_data["form_id"]).val(data.data[form_data["data_id"]]);
+            }
+        }
+
+        if (delete_handler === undefined) {
+            partial.find("#requirement_delete").hide();
+        } else {
+            partial.find("#requirement_delete").off('click').on('click', delete_handler);
+        }
+
+        partial.find("#requirement_cancel").off('click').on('click', cancel_handler);
+        partial.find("#requirement_submit").off('click').on('click', submit_handler);
+    });
+}
+
+function requirement_get_submit_data(requirement_type_number, element) {
+    let requirement_template = requirement_types[requirement_type_number];
 
     let data = {
         "requirement_type": requirement_template["requirement_type"],
@@ -126,14 +160,25 @@ function requirement_submit_data(requirement_type_number, element){
     };
 
     //store constant data from template
-    for(let const_data of requirement_template["const_data"]){
+    for (let const_data of requirement_template["const_data"]) {
         data.data[const_data.data_id] = const_data.data;
     }
 
-    if (requirement_type_number >= 1 && requirement_type_number <= 4){
-        for (let form_data of requirement_template["id_map"]){
+    if (requirement_type_number >= 1 && requirement_type_number <= 4) {
+        for (let form_data of requirement_template["id_map"]) {
             data.data[form_data["data_id"]] = element.find("#" + form_data["form_id"]).val();
         }
         return data;
     }
+}
+
+function requirement_get_requirements(entity_id, success_callback) {
+    $.ajax({
+        url: '/api/v1/entity/' + entity_id + '/requirement',
+        type: 'GET',
+        contentType: 'application/json;charset=UTF-8',
+    }).done(function (data) {
+        success_callback(data);
+    });
+
 }

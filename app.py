@@ -48,4 +48,5 @@ def get_main_page():
 
 
 if __name__ == '__main__':
+    # In future add Threaded=True for possible performance enhancement
     app.run(debug=True)

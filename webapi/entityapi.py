@@ -166,8 +166,13 @@ def entity_requirement_post(entity_id: int):
     elif data["requirement_type"] == requirementhelper.RequirementType.RELATIVE.name:
         if "during" not in data["data"] and "after" not in data["data"]:
             return jsonify({"error": "Missing during and after boolean flag (pick one to be true)"}), 400
-        if "distance" not in data["data"] or not isinstance(data["data"]["distance"], (int, float)):
-            return jsonify({"error": "Missing distance in hours (float) or invalid data passed"}), 400
+        if "distance" not in data["data"]:
+            return jsonify({"error": "Missing distance in hours (float)"}), 400
+        try:
+            float(data["data"]["distance"])
+        except ValueError:
+            return jsonify({"error": "Invalid distance value."}), 400
+
         during = data["data"]["during"]
         after = data["data"]["after"]
         if (during and after) or (not during and not after):

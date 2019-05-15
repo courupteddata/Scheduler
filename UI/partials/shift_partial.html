@@ -1,17 +1,42 @@
-<table class="table" id="shift_table">
-  <thead>
-    <tr>
-      <th scope="col">Location</th>
-      <th scope="col">Dates</th>
-      <th scope="col">View</th>
-      <th scope="col">Export to .csv</th>
-    </tr>
-  </thead>
-  <tbody id="shift_table_body">
-  </tbody>
-</table>
-<div class="container-fluid">
-  <a href="add_schedule.html">
-    <button class="btn btn-primary">Add New Schedule</button>
-  </a>
+<div>
+    <div class="row">
+        <div class="col">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <label>
+                Window Start:
+                <input type="date" name="Window Start" id="shift_window_start">
+            </label>
+        </div>
+        <div class="col">
+            <label>
+                Window End:
+                <input type="date" name="Window End" id="shift_window_end">
+            </label>
+        </div>
+        <div class="col">
+            <label>
+                Select Employee:
+                <select class="selectpicker dropdown" data-dropup-auto="false" data-live-search="true"
+                        id="shift_employee_select" title="Select Employee" multiple>
+                </select>
+            </label>
+        </div>
+        <div class="col">
+            <label>
+                Select Location:
+                <select class="selectpicker dropdown" data-dropup-auto="false" data-live-search="true"
+                        id="shift_location_select" title="Select Location" multiple>
+                </select>
+            </label>
+        </div>
+        <div class="col pt-2">
+            <button class="btn btn-primary" id="shift_export_button">Export</button>
+        </div>
+    </div>
+
+
 </div>

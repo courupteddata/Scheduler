@@ -173,8 +173,9 @@ class ShiftManager:
             self.connection.commit()
         return modified_row_count
 
-    def get_shift_by_location_id(self, location_id: int = -1,
-                                 start: datetime = None, end: datetime = None, entity_id: int = -2) -> List[Shift]:
+    def get_shift_by_location_id(self, location_id: Union[int, List[int]] = -1,
+                                 start: datetime = None, end: datetime = None,
+                                 entity_id: Union[int, List[int]] = -2) -> List[Shift]:
 
         where_query_string = ""
         query_data = ()
@@ -182,15 +183,26 @@ class ShiftManager:
 
         if location_id != -1:
             previous = True
-            where_query_string += " location_id=?"
-            query_data += (location_id,)
+            if isinstance(location_id, list):
+                where_query_string += "( " + ' OR '.join(["location_id=?"] * len(location_id)) + " )"
+                for item in location_id:
+                    query_data += (item,)
+            else:
+                where_query_string += " location_id=?"
+                query_data += (location_id,)
 
         if entity_id != -2:
             if previous:
                 where_query_string += " AND"
             previous = True
-            where_query_string += " entity_id=?"
-            query_data += (entity_id,)
+
+            if isinstance(entity_id, list):
+                where_query_string += "( " + ' OR '.join(["entity_id=?"] * len(entity_id)) + " )"
+                for item in entity_id:
+                    query_data += (item,)
+            else:
+                where_query_string += " entity_id=?"
+                query_data += (entity_id,)
 
         if start is not None:
             if previous:

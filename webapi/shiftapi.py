@@ -29,9 +29,17 @@ shared_shift_manager = shiftmanager.ShiftManager()
 @shift_api.route("/shift", methods=['GET'])
 def shift_get():
     location_id = request.args.get('location_id', type=int, default=-1)
+
+    if location_id != -1:
+        location_id = request.args.getlist('location_id', type=int)
+
     start = request.args.get('start', type=str, default=None)
     end = request.args.get('end', type=str, default=None)
     entity_id = request.args.get('entity_id', type=int, default=-2)
+
+    if entity_id != -2:
+        entity_id = request.args.getlist('entity_id', type=int)
+
     export = request.args.get('export', type=bool, default=False)
 
     if start is not None:

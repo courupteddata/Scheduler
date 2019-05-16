@@ -56,6 +56,9 @@ class Scheduler:
                     cost_to_schedule = self.entity_manager.get_cost_to_schedule(person, shift.start, shift.end)
                     heapq.heappush(options, (cost_to_schedule, count, person))
 
+                if len(options) == 0:
+                    continue
+
                 cost, _, best_person = heapq.heappop(options)
 
                 if cost <= current_cost_limit:

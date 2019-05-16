@@ -90,7 +90,7 @@ class EntityManager:
         for req in ent.requirements:
             if req.applies(state, shift_start, shift_end):
                 req_count += 1
-                total_cost += req.cost
+                total_cost += float(req.cost)
 
         if req_count == 0:
             return 0

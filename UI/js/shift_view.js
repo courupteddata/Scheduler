@@ -4,6 +4,8 @@ let shift_end_window = "";
 let shift_view_partial = "";
 let shift_list_of_shifts = [];
 
+let shift_calendar = undefined;
+
 function shift_load() {
     $('#shift_view').load('../partials/shift_partial.html', function () {
         shift_view_partial = $(this);
@@ -55,7 +57,7 @@ function shift_get_shifts(success_callback) {
 
 function shift_create_calendar() {
 
-    $('#shift_calendar_view').fullCalendar({
+    shift_calendar = new FullCalendar.Calendar(document.getElementById("shift_calendar_view"), {
         plugins: ['dayGrid', 'interaction'],
         defaultView: 'dayGridMonth',
         editable: true,
@@ -134,13 +136,15 @@ function shift_create_calendar() {
             $('.modal').modal();
         },*/
         header: {
-            left: 'prev,next today',
-            center: 'title',
+            left: '',
+            center: 'title prev,today,next',
+            right: ''
         },
         events: []
     }
 );
-shift_view_partial.find("#shift_calendar_view").fullCalendar('render');
+shift_calendar.render();
+
 //calendar.render();
 }
 
@@ -169,9 +173,8 @@ function shift_setup_button_clicks_and_change_handlers() {
         window.location.href = ('/api/v1/shift?export=true&' + shift_get_query_string());
     });
 
-    shift_view_partial.find("#shift_update_button").off('click').on('click', function (e) {
-        //e.preventDefault();
-        //window.location.href = ('/api/v1/shift?export=true&' + shift_get_query_string());
+    shift_view_partial.find("#shift_update_button").off('click').on('click', function () {
+        shift_update_events_list();
     });
 }
 
@@ -235,7 +238,7 @@ function shift_get_query_string() {
     if (shift_end_window !== "") {
         query_parts.push("end=" + shift_end_window);
     }
-    console.log(query_parts);
+
     return query_parts.join("&");
 }
 
@@ -277,9 +280,7 @@ function shift_update_events_list() {
             });
         });
 
-        let temp_cal = $("#shift_calendar_view", shift_view_partial);
-        temp_cal.fullCalendar('removeEvents');
-        temp_cal.fullCalendar('addEventSource', event);
-
+        shift_calendar.removeAllEvents();
+        shift_calendar.addEventSource(event);
     });
 }

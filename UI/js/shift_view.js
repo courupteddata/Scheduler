@@ -1,8 +1,28 @@
+/*
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    shift_view.js, Copyright 2019 Nathan Jones (Nathan@jones.one)
+
+    This file is based off of work from Jac Chalker.
+    He showed how to use FullCalendar plugin and some features, but it is drastically different now.
+*/
 let shift_start_window = "";
 let shift_end_window = "";
 
 let shift_view_partial = "";
-let shift_list_of_shifts = [];
 
 let shift_calendar = undefined;
 
@@ -364,7 +384,7 @@ function shift_fill_modal_employee_select(select_element, location_select, succe
                 $.when.apply($, queries).then(function () {
 
                     let output = '<optgroup label="Special"><option value="-1">Empty</option></optgroup>';
-                    
+
                     if (queries.length === 1) {
                         let element = arguments[0];
                         output += '<option data-tokens="' + element.entity_name + '" value="' + element.entity_id + '">' + element.entity_name + '</option>';

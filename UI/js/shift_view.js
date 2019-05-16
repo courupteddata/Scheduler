@@ -59,7 +59,7 @@ function shift_create_calendar() {
                         "info": info.event.extendedProps.info,
                         "start": new Date(info.event.start).toISOString(),
                         "end": new Date(info.event.end).toISOString()
-                    }, function() {
+                    }, function () {
                         shift_delete_shift(info.event.id, function () {
                             shift_update_events_list();
                         })
@@ -250,7 +250,7 @@ function shift_prepare_modal(purpose, info) {
         let modal_delete = modal.find('#shift_delete');
 
         //Clear the data
-        modal_shift_employee_select.empty().selectpicker('render');
+        modal_shift_employee_select.selectpicker('val', []).selectpicker('render');
         modal_shift_start_datetime.datetimepicker("destroy");
         modal_shift_end_datetime.datetimepicker("destroy");
         modal_shift_info_input.text("");
@@ -272,6 +272,8 @@ function shift_prepare_modal(purpose, info) {
                 });
             }, function () {
                 modal_shift_location_select.selectpicker('val', modal_shift_location_id);
+
+
             });
 
             modal_shift_start_datetime.datetimepicker({"date": moment(event.start)});
@@ -362,11 +364,17 @@ function shift_fill_modal_employee_select(select_element, location_select, succe
                 $.when.apply($, queries).then(function () {
 
                     let output = '<optgroup label="Special"><option value="-1">Empty</option></optgroup>';
-
-                    for (let data of arguments) {
-                        let element = data[0];
-
+                    
+                    if (queries.length === 1) {
+                        let element = arguments[0];
                         output += '<option data-tokens="' + element.entity_name + '" value="' + element.entity_id + '">' + element.entity_name + '</option>';
+                    } else if(queries.length > 1) {
+                        for (let data of arguments) {
+                            if (data[0] !== undefined) {
+                                let element = data[0];
+                                output += '<option data-tokens="' + element.entity_name + '" value="' + element.entity_id + '">' + element.entity_name + '</option>';
+                            }
+                        }
                     }
 
 

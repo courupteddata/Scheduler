@@ -44,7 +44,7 @@ class DB:
                          'start TEXT NOT NULL, ' \
                          'end TEXT NOT NULL, ' \
                          'info TEXT, ' \
-                         'entity_id INTEGER DEFAULT -1, ' \
+                         'entity_id INTEGER DEFAULT NULL, ' \
                          'location_id INTEGER NOT NULL ,' \
                          'CONSTRAINT shift_check_ent FOREIGN KEY(entity_id) ' \
                          'REFERENCES entity(id) ON DELETE SET DEFAULT,' \

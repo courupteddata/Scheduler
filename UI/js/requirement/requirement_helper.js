@@ -185,8 +185,6 @@ function requirement_load_partial_with_data(destination, data, submit_handler, c
                 if (data.data["is_rolling"] === true) {
                     let temp_end = start.add(Number(data.data["length"]), 'hours');
 
-                    console.log(temp_end);
-
                     $("#requirement_end_datetime", partial).datetimepicker({"date": temp_end});
                 } else {
                     $("#requirement_end_datetime", partial).datetimepicker({"date": moment(new Date(data.data["end"]))});

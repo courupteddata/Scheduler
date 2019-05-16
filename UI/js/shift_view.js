@@ -46,6 +46,17 @@ function shift_create_shift(data, success_callback) {
     });
 }
 
+function shift_create_template_shift(data, success_callback) {
+    $.ajax({
+        url: '/api/v1/shift/template',
+        type: 'POST',
+        data: JSON.stringify(data)
+    }).done(function () {
+        success_callback();
+    });
+
+}
+
 function shift_get_shifts(success_callback) {
     $.ajax({
         url: '/api/v1/shift?' + shift_get_query_string(),
@@ -58,12 +69,12 @@ function shift_get_shifts(success_callback) {
 function shift_create_calendar() {
 
     shift_calendar = new FullCalendar.Calendar(document.getElementById("shift_calendar_view"), {
-        plugins: ['dayGrid', 'interaction'],
-        defaultView: 'dayGridMonth',
-        editable: true,
-        currentTimezone: 'local',
-        /**
-         eventDrop: function (info) {
+            plugins: ['dayGrid', 'interaction'],
+            defaultView: 'dayGridMonth',
+            editable: true,
+            currentTimezone: 'local',
+            /**
+             eventDrop: function (info) {
             if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
                 info.revert();
             } else {
@@ -98,7 +109,7 @@ function shift_create_calendar() {
                 });
             }
         },
-         eventClick: function (info) {
+             eventClick: function (info) {
             var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
             var start = (new Date(info.event.start - tzoffset)).toISOString().slice(0, 19)
             var end = (new Date(info.event.end - tzoffset)).toISOString().slice(0, 19)
@@ -117,33 +128,19 @@ function shift_create_calendar() {
             $('#delete')[0].removeAttribute('hidden');
             $('.modal-title')[0].innerHTML = 'Edit Shift'
             $('.modal').modal();
-        },
-         dateClick: function (info) {
-            $('#start_time')[0].value = info.dateStr + "T07:00";
-            $('#end_time')[0].value = info.dateStr + "T15:00";
-            jQuery.get("http://127.0.0.1:5000/api/v1/entity", function (data) {
-                data.entity.forEach(function (employee) {
-                    opt = document.createElement('option');
-                    opt.appendChild(document.createTextNode(employee.entity_name));
-                    opt.value = employee.entity_id;
-                    document.getElementById("employee").appendChild(opt);
-                });
-            });
-            $('#shift_id')[0].value = null;
-            $('#submit')[0].setAttribute('onclick', 'submitNew(this.form);');
-            $('#delete')[0].setAttribute('hidden', '');
-            $('.modal-title')[0].innerHTML = 'Add Shift'
-            $('.modal').modal();
         },*/
-        header: {
-            left: '',
-            center: 'title prev,today,next',
-            right: ''
-        },
-        events: []
-    }
-);
-shift_calendar.render();
+            dateClick: function (info) {
+                shift_prepare_modal("Add", info);
+            },
+            header: {
+                left: '',
+                center: 'title prev,today,next',
+                right: ''
+            },
+            events: []
+        }
+    );
+    shift_calendar.render();
 
 //calendar.render();
 }
@@ -282,5 +279,219 @@ function shift_update_events_list() {
 
         shift_calendar.removeAllEvents();
         shift_calendar.addEventSource(event);
+    });
+}
+
+function shift_prepare_modal(purpose, info) {
+    let shift_modal = $('#shift_modal', shift_view_partial);
+
+    shift_modal.off('show.bs.modal').on('show.bs.modal', function () {
+        let modal = $(this);
+
+        //ID and Nome field
+        let modal_shift_id_group = modal.find("#shift_modal_id_group");
+        let modal_shift_id_input = modal.find("#shift_modal_shift_id");
+
+        let modal_shift_location_select = modal.find("#shift_modal_location_select");
+        let modal_shift_employee_select = modal.find("#shift_modal_employee_select");
+
+        let modal_shift_start_datetime = modal.find("#shift_modal_start_datetime");
+        let modal_shift_end_datetime = modal.find("#shift_modal_end_datetime");
+
+        let modal_shift_info_input = modal.find("#shift_info_input");
+        let modal_shift_repeat_till = modal.find("#shift_modal_repeat_until");
+
+        modal.find("#shift_modal_label").text(purpose + " Shift");
+
+        //Two Buttons
+        let modal_submit = modal.find("#shift_submit");
+        let modal_delete = modal.find('#shift_delete');
+
+        //Clear the data
+        modal_shift_employee_select.empty().selectpicker('render');
+
+
+        if (purpose === "Edit") {
+            let event = info.event;
+
+            let modal_shift_info = event.extendedProps.info;
+            let modal_shift_id = event.id;
+            let modal_shift_location_id = event.extendedProps.location_id;
+            let modal_shift_entity_id = event.extendedProps.entity_id;
+
+            modal_delete.show();
+
+            shift_fill_modal_location_select(modal_shift_location_select, function () {
+                shift_fill_modal_employee_select(modal_shift_employee_select, modal_shift_location_select, function () {
+                    modal_shift_employee_select.val(modal_shift_entity_id);
+                });
+            }, function () {
+                modal_shift_location_select.val(modal_shift_location_id);
+            });
+
+            modal_shift_start_datetime.datetimepicker({"date": moment(event.start)});
+            modal_shift_end_datetime.datetimepicker({"date": moment(event.end)});
+
+            modal_shift_info_input.text(modal_shift_info);
+
+            modal_shift_id_group.show();
+            modal_shift_id_input.val(modal_shift_id);
+
+            modal_submit.off('click').click(function () {
+                let selected_locations = new Set(modal_shift_location_select.val());
+                let selected_employee = modal_shift_employee_select.val();
+                let selected_repeat_until = modal_shift_repeat_till.val();
+                let info_text = modal_shift_info_input.text();
+                shift_handle_submit(modal_shift_id, selected_locations, selected_employee, selected_repeat_until, info_text,
+                    (new Date(modal_shift_start_datetime.val())).toISOString(), (new Date(modal_shift_end_datetime.val())).toISOString());
+
+            });
+
+            modal_delete.off('click').click(function () {
+                shift_delete_shift(modal_shift_id, function () {
+                    shift_calendar.removeEvent(modal_shift_id);
+                });
+            });
+
+        } else {
+            modal_delete.hide();
+            modal_shift_id_group.hide();
+
+            modal_shift_start_datetime.datetimepicker({"date": moment(info.dateStr + "T07:00")});
+            modal_shift_end_datetime.datetimepicker({"date": moment(info.dateStr + "T15:00")});
+
+            shift_fill_modal_location_select(modal_shift_location_select, function () {
+                shift_fill_modal_employee_select(modal_shift_employee_select, modal_shift_location_select);
+            });
+
+
+            modal_submit.off('click').click(function () {
+                let selected_locations = new Set(modal_shift_location_select.val());
+                let selected_employee = modal_shift_employee_select.val();
+                let selected_repeat_until = modal_shift_repeat_till.val();
+                let info_text = modal_shift_info_input.text();
+
+
+                shift_handle_submit(-1, selected_locations, selected_employee, selected_repeat_until, info_text,
+                    (new Date(modal_shift_start_datetime.val())).toISOString(), (new Date(modal_shift_end_datetime.val())).toISOString());
+
+            });
+        }
+    });
+
+    shift_modal.modal();
+}
+
+function shift_fill_modal_location_select(select_element, success_onchange_callback, success_callback) {
+    jQuery.get("/api/v1/location", function (locations) {
+        let output = "";
+        locations.location.forEach(function (location) {
+            output += '<option value="' + location.location_id + '">' + location.location_label + '</option>'
+        });
+
+        select_element.off("changed.bs.select").on('changed.bs.select', success_onchange_callback);
+        select_element.empty().append(output).val('').selectpicker('render').selectpicker('refresh');
+
+
+        if (success_callback !== undefined) {
+            success_callback();
+        }
+    });
+}
+
+function shift_fill_modal_employee_select(select_element, location_select, success_callback) {
+
+    if (location_select.val().length === 1) {
+        jQuery.get("/api/v1/location/" + location_select.val() + "/entity", function (entity_id) {
+
+                let queries = [];
+
+                entity_id.entity_ids.forEach(function (an_id) {
+                    queries.push(jQuery.get("/api/v1/entity/" + an_id));
+                });
+
+
+                $.when.apply($, queries).then(function () {
+
+                    let output = '<optgroup label="Special"><option value="-1">Empty</option></optgroup>';
+
+                    for (let data of arguments) {
+                        let element = data[0];
+
+                        output += '<option data-tokens="' + element.entity_name + '" value="' + element.entity_id + '">' + element.entity_name + '</option>';
+                    }
+
+
+                    select_element.empty().append(output).selectpicker('refresh');
+
+                    if (success_callback !== undefined) {
+
+                        success_callback();
+                    }
+
+
+                });
+            }
+        );
+
+    } else {
+        //Too many employee were picked or none have been picked
+        select_element.empty().append('<optgroup label="Special"><option value="-1">Empty</option></optgroup>').selectpicker('refresh');
+
+        if (success_callback !== undefined) {
+
+            success_callback();
+        }
+    }
+}
+
+function shift_handle_submit(shift_id, selected_locations, selected_employee, selected_repeat_until, info_text, shift_start, shift_end) {
+    if (shift_id !== "" && shift_id !== -1) {
+        shift_delete_shift(shift_id);
+    }
+
+    let data = {
+        "info": info_text,
+        "start": shift_start,
+        "end": shift_end
+    };
+
+    let repeat_flag = false;
+
+    if (('' + selected_employee) !== "-1" && '' + selected_employee !== "") {
+        data["entity_id"] = selected_employee;
+    } else {
+        data["entity_id"] = -1;
+    }
+
+    if (selected_repeat_until !== "") {
+        repeat_flag = true;
+    }
+
+    let requests = [];
+
+    for (let location of selected_locations) {
+        data["location_id"] = location;
+
+        if (repeat_flag) {
+            let item = {"end": selected_repeat_until, "sample": [data]};
+
+            requests.push($.ajax({
+                url: '/api/v1/shift/template',
+                type: 'POST',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify(item)
+            }));
+        } else {
+            requests.push($.ajax({
+                url: '/api/v1/shift',
+                type: 'POST',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify(data)
+            }));
+        }
+    }
+    $.when.apply($, requests).then(function () {
+        shift_update_events_list();
     });
 }

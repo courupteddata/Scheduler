@@ -82,10 +82,16 @@ class ShiftManager:
 
     def add_shift(self, shift: Shift) -> int:
         with self.connection_modify_lock:
-            last_row_id = self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
-                                                  "VALUES (?,?,?,?,?)",
-                                                  (shift.start.isoformat(), shift.end.isoformat(),
-                                                   shift.info, shift.entity_id, shift.location_id)).lastrowid
+            if shift.shift_id == -1:
+                last_row_id = self.connection.execute("INSERT INTO shift(start, end, info, location_id) "
+                                                      "VALUES (?,?,?,?)",
+                                                      (shift.start.isoformat(), shift.end.isoformat(),
+                                                       shift.info, shift.location_id)).lastrowid
+            else:
+                last_row_id = self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
+                                                      "VALUES (?,?,?,?,?)",
+                                                      (shift.start.isoformat(), shift.end.isoformat(),
+                                                       shift.info, shift.entity_id, shift.location_id)).lastrowid
             self.connection.commit()
         return last_row_id
 
@@ -98,10 +104,20 @@ class ShiftManager:
 
     def update_shift(self, shift: Shift) -> int:
         with self.connection_modify_lock:
-            modified_row_count = self.connection.execute("UPDATE shift SET start=?,end=?,info=?,entity_id=?,"
-                                                         "location_id=? WHERE id=?",
-                                                         (shift.start.isoformat(), shift.end.isoformat(), shift.info,
-                                                          shift.entity_id, shift.location_id)).rowcount
+            if shift.shift_id == -1:
+                modified_row_count = self.connection.execute("UPDATE shift SET start=?,end=?,info=?,entity_id=NULL,"
+                                                             "location_id=? WHERE id=?",
+                                                             (
+                                                                 shift.start.isoformat(), shift.end.isoformat(),
+                                                                 shift.info,
+                                                                 shift.location_id)).rowcount
+            else:
+                modified_row_count = self.connection.execute("UPDATE shift SET start=?,end=?,info=?,entity_id=?,"
+                                                             "location_id=? WHERE id=?",
+                                                             (
+                                                                 shift.start.isoformat(), shift.end.isoformat(),
+                                                                 shift.info,
+                                                                 shift.entity_id, shift.location_id)).rowcount
             self.connection.commit()
         return modified_row_count
 
@@ -111,6 +127,9 @@ class ShiftManager:
 
         if data is None:
             return None
+
+        if data[4] is None:
+            data[4] = -1
 
         return Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]), info=data[3],
                      entity_id=data[4], location_id=data[5])
@@ -147,17 +166,32 @@ class ShiftManager:
             query_params += (info,)
             set_string += "info=?"
 
-        if entity_id is not None:
+        """if entity_id is not None:
             if previous:
                 set_string += ","
             previous = True
             query_params += (entity_id,)
-            set_string += "entity_id=?"
+            set_string += "entity_id=? """
 
         if previous:
-            set_string = " SET " + set_string
-            query_params += (shift_id,)
+            if entity_id is not None:
+                if entity_id == -1:
+                    set_string = " SET entity_id=NULL," + set_string
+                else:
+                    set_string = " SET " + set_string + ",entity_id=?"
+                    query_params += (entity_id,)
+            else:
+                set_string = " SET " + set_string
+        else:
+            if entity_id is not None:
+                previous = True
+                if entity_id == -1:
+                    set_string = " SET entity_id=NULL"
+                else:
+                    set_string = " SET entity_id=?"
+                    query_params += (entity_id,)
 
+        if previous:
             with self.connection_modify_lock:
                 self.connection.execute(f"UPDATE shift {set_string} WHERE id=?;", query_params)
                 self.connection.commit()
@@ -168,8 +202,12 @@ class ShiftManager:
 
     def fill_shift_by_id(self, shift_id: int, entity_id: int) -> int:
         with self.connection_modify_lock:
-            modified_row_count = self.connection.execute("UPDATE shift SET entity_id=? WHERE id=?",
-                                                         (entity_id, shift_id)).rowcount
+            if entity_id == -1:
+                modified_row_count = self.connection.execute("UPDATE shift SET entity_id=NULL WHERE id=?",
+                                                             (shift_id,)).rowcount
+            else:
+                modified_row_count = self.connection.execute("UPDATE shift SET entity_id=? WHERE id=?",
+                                                             (entity_id, shift_id)).rowcount
             self.connection.commit()
         return modified_row_count
 
@@ -196,10 +234,19 @@ class ShiftManager:
                 where_query_string += " AND"
             previous = True
 
+            found_empty = False
+            add_part = ""
+
             if isinstance(entity_id, list):
-                where_query_string += "( " + ' OR '.join(["entity_id=?"] * len(entity_id)) + " )"
                 for item in entity_id:
-                    query_data += (item,)
+                    if item == -1:
+                        found_empty = True
+                        add_part = "entity_id is NULL"
+                    else:
+                        query_data += (item,)
+                where_query_string += "( " + ' OR '.join(
+                    ["entity_id=?"] * (len(entity_id) - 1 if found_empty else len(entity_id))) + add_part + " )"
+
             else:
                 where_query_string += " entity_id=?"
                 query_data += (entity_id,)
@@ -221,14 +268,22 @@ class ShiftManager:
             where_query_string = " WHERE" + where_query_string
 
         return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]), info=data[3],
-                      entity_id=data[4], location_id=data[5]) for data in self.connection.execute(
-            f"SELECT id, start, end, info, entity_id, location_id FROM shift {where_query_string};", query_data)]
+                      entity_id=data[4] if data[4] is not None else -1, location_id=data[5]) for data in
+                self.connection.execute(
+                    f"SELECT id, start, end, info, entity_id, location_id FROM shift {where_query_string};",
+                    query_data)]
 
     def get_shift_by_entity_id(self, entity_id: int) -> List[Shift]:
-        return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
-                      info=data[3], entity_id=data[4], location_id=data[5])
-                for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
-                                                    "FROM shift WHERE entity_id=?", (entity_id,))]
+        if entity_id == -1:
+            return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
+                          info=data[3], entity_id=-1, location_id=data[5])
+                    for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
+                                                        "FROM shift WHERE entity_id IS NULL")]
+        else:
+            return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
+                          info=data[3], entity_id=data[4], location_id=data[5])
+                    for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
+                                                        "FROM shift WHERE entity_id=?", (entity_id,))]
 
     def add_shift_from_sample(self, template_week: Union[List[Shift], List[List[Shift]]], end: datetime) -> int:
 
@@ -302,10 +357,16 @@ class ShiftManager:
 
         with self.connection_modify_lock:
             for shift in shifts:
-                count += self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
-                                                 "VALUES (?,?,?,?,?)",
-                                                 (shift.start.isoformat(), shift.end.isoformat(), shift.info,
-                                                  shift.entity_id, shift.location_id)).rowcount
+                if shift.entity_id == -1:
+                    count += self.connection.execute("INSERT INTO shift(start, end, info, location_id) "
+                                                     "VALUES (?,?,?,?)",
+                                                     (shift.start.isoformat(), shift.end.isoformat(), shift.info,
+                                                      shift.location_id)).rowcount
+                else:
+                    count += self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
+                                                     "VALUES (?,?,?,?,?)",
+                                                     (shift.start.isoformat(), shift.end.isoformat(), shift.info,
+                                                      shift.entity_id, shift.location_id)).rowcount
             self.connection.commit()
 
         return count

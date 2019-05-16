@@ -22,47 +22,22 @@ function shift_delete_shift(shift_id, success_callback) {
         url: '/api/v1/shift/' + shift_id,
         type: 'DELETE'
     }).done(function () {
-        success_callback();
+        if (success_callback !== undefined) {
+            success_callback();
+        }
     });
 }
 
-function shift_update_shift(shift_id, data, success_callback) {
-    $.ajax({
-        url: '/api/v1/shift/' + shift_id,
-        type: 'PUT',
-        data: JSON.stringify(data)
-    }).done(function () {
-        success_callback();
-    });
-}
-
-function shift_create_shift(data, success_callback) {
+function shift_add_shift(data, success_callback) {
     $.ajax({
         url: '/api/v1/shift',
         type: 'POST',
+        contentType: 'application/json;charset=UTF-8',
         data: JSON.stringify(data)
     }).done(function () {
-        success_callback();
-    });
-}
-
-function shift_create_template_shift(data, success_callback) {
-    $.ajax({
-        url: '/api/v1/shift/template',
-        type: 'POST',
-        data: JSON.stringify(data)
-    }).done(function () {
-        success_callback();
-    });
-
-}
-
-function shift_get_shifts(success_callback) {
-    $.ajax({
-        url: '/api/v1/shift?' + shift_get_query_string(),
-        type: 'GET'
-    }).done(function (data) {
-        success_callback(data.shift);
+        if (success_callback !== undefined) {
+            success_callback();
+        }
     });
 }
 
@@ -73,62 +48,27 @@ function shift_create_calendar() {
             defaultView: 'dayGridMonth',
             editable: true,
             currentTimezone: 'local',
-            /**
-             eventDrop: function (info) {
-            if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
-                info.revert();
-            } else {
-                var employee_id;
-                $.ajax({
-                    url: 'http://127.0.0.1:5000/api/v1/entity',
-                    type: 'GET',
-                    success: function (employees) {
-                        employees.entity.forEach(function (employee) {
-                            if (info.event.title == employee.entity_name) {
-                                employee_id = employee.entity_id
-                            }
-                        });
-                        $.ajax({
-                            url: 'http://127.0.0.1:5000/api/v1/shift/' + info.event.id,
-                            type: 'DELETE',
-                            success: function (data) {
-                                $.ajax({
-                                    url: 'http://127.0.0.1:5000/api/v1/shift',
-                                    type: 'POST',
-                                    contentType: 'application/json;charset=UTF-8',
-                                    data: JSON.stringify({
-                                        "start": info.event.start,
-                                        "end": info.event.end,
-                                        "location_id": window.location.search.match(/id=[^&])[0].substr(3),
-                                        "entity_id": employee_id
-                                    })
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-        },
-             eventClick: function (info) {
-            var tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds
-            var start = (new Date(info.event.start - tzoffset)).toISOString().slice(0, 19)
-            var end = (new Date(info.event.end - tzoffset)).toISOString().slice(0, 19)
-            $('#start_time')[0].value = start;
-            $('#end_time')[0].value = end;
-            jQuery.get("http://127.0.0.1:5000/api/v1/entity", function (data) {
-                data.entity.forEach(function (employee) {
-                    opt = document.createElement('option');
-                    opt.appendChild(document.createTextNode(employee.entity_name));
-                    opt.value = employee.entity_id;
-                    document.getElementById("employee").appendChild(opt);
-                });
-            });
-            $('#shift_id')[0].value = info.event.id;
-            $('#submit')[0].setAttribute('onclick', 'submitEdit(this.form);');
-            $('#delete')[0].removeAttribute('hidden');
-            $('.modal-title')[0].innerHTML = 'Edit Shift'
-            $('.modal').modal();
-        },*/
+
+            eventDrop: function (info) {
+                if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
+                    info.revert();
+                } else {
+                    shift_add_shift({
+                        "entity_id": info.event.extendedProps.entity_id,
+                        "location_id": info.event.extendedProps.location_id,
+                        "info": info.event.extendedProps.info,
+                        "start": new Date(info.event.start).toISOString(),
+                        "end": new Date(info.event.end).toISOString()
+                    }, function() {
+                        shift_delete_shift(info.event.id, function () {
+                            shift_update_events_list();
+                        })
+                    });
+                }
+            },
+            eventClick: function (info) {
+                shift_prepare_modal("Edit", info);
+            },
             dateClick: function (info) {
                 shift_prepare_modal("Add", info);
             },
@@ -268,7 +208,7 @@ function shift_update_events_list() {
                 "start": item.start,
                 "end": item.end,
                 "id": item.shift_id,
-                "title": item.entity_id == "-1" ? "Unassigned" : entity_id_to_name[item.entity_id],
+                "title": '' + item.entity_id === "-1" ? "Unassigned" : entity_id_to_name[item.entity_id],
                 "extendedProps": {
                     "entity_id": item.entity_id,
                     "location_id": item.location_id,
@@ -278,6 +218,7 @@ function shift_update_events_list() {
         });
 
         shift_calendar.removeAllEvents();
+        shift_calendar.removeAllEventSources();
         shift_calendar.addEventSource(event);
     });
 }
@@ -300,6 +241,7 @@ function shift_prepare_modal(purpose, info) {
 
         let modal_shift_info_input = modal.find("#shift_info_input");
         let modal_shift_repeat_till = modal.find("#shift_modal_repeat_until");
+        let modal_shift_repeat_till_group = modal.find("#shift_modal_repeat_until_group");
 
         modal.find("#shift_modal_label").text(purpose + " Shift");
 
@@ -309,7 +251,9 @@ function shift_prepare_modal(purpose, info) {
 
         //Clear the data
         modal_shift_employee_select.empty().selectpicker('render');
-
+        modal_shift_start_datetime.datetimepicker("destroy");
+        modal_shift_end_datetime.datetimepicker("destroy");
+        modal_shift_info_input.text("");
 
         if (purpose === "Edit") {
             let event = info.event;
@@ -320,13 +264,14 @@ function shift_prepare_modal(purpose, info) {
             let modal_shift_entity_id = event.extendedProps.entity_id;
 
             modal_delete.show();
+            modal_shift_repeat_till_group.hide();
 
             shift_fill_modal_location_select(modal_shift_location_select, function () {
                 shift_fill_modal_employee_select(modal_shift_employee_select, modal_shift_location_select, function () {
-                    modal_shift_employee_select.val(modal_shift_entity_id);
+                    modal_shift_employee_select.selectpicker('val', modal_shift_entity_id);
                 });
             }, function () {
-                modal_shift_location_select.val(modal_shift_location_id);
+                modal_shift_location_select.selectpicker('val', modal_shift_location_id);
             });
 
             modal_shift_start_datetime.datetimepicker({"date": moment(event.start)});
@@ -336,10 +281,12 @@ function shift_prepare_modal(purpose, info) {
 
             modal_shift_id_group.show();
             modal_shift_id_input.val(modal_shift_id);
+            modal_shift_id_group.hide();
 
             modal_submit.off('click').click(function () {
                 let selected_locations = new Set(modal_shift_location_select.val());
                 let selected_employee = modal_shift_employee_select.val();
+
                 let selected_repeat_until = modal_shift_repeat_till.val();
                 let info_text = modal_shift_info_input.text();
                 shift_handle_submit(modal_shift_id, selected_locations, selected_employee, selected_repeat_until, info_text,
@@ -349,13 +296,14 @@ function shift_prepare_modal(purpose, info) {
 
             modal_delete.off('click').click(function () {
                 shift_delete_shift(modal_shift_id, function () {
-                    shift_calendar.removeEvent(modal_shift_id);
+                    event.remove();
                 });
             });
 
         } else {
             modal_delete.hide();
             modal_shift_id_group.hide();
+            modal_shift_repeat_till_group.show();
 
             modal_shift_start_datetime.datetimepicker({"date": moment(info.dateStr + "T07:00")});
             modal_shift_end_datetime.datetimepicker({"date": moment(info.dateStr + "T15:00")});
@@ -458,7 +406,7 @@ function shift_handle_submit(shift_id, selected_locations, selected_employee, se
 
     let repeat_flag = false;
 
-    if (('' + selected_employee) !== "-1" && '' + selected_employee !== "") {
+    if (('' + selected_employee) !== "-1" && '' + selected_employee !== "" && selected_employee !== undefined) {
         data["entity_id"] = selected_employee;
     } else {
         data["entity_id"] = -1;
@@ -474,7 +422,7 @@ function shift_handle_submit(shift_id, selected_locations, selected_employee, se
         data["location_id"] = location;
 
         if (repeat_flag) {
-            let item = {"end": selected_repeat_until, "sample": [data]};
+            let item = {"end": new Date(selected_repeat_until).toISOString(), "sample": [data]};
 
             requests.push($.ajax({
                 url: '/api/v1/shift/template',

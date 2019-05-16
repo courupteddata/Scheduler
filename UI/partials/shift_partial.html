@@ -65,6 +65,13 @@
                         <input type="text" class="form-control" id="shift_modal_shift_id" readonly>
                     </div>
 
+                    <div class="form-group row">
+                        <label for="shift_info_input" class="col-sm-3 col-form-label">Shift Info (Optional):</label>
+                        <div class="col-sm-4">
+                            <input class="form-control" type="text" id="shift_info_input">
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label for="shift_modal_location_select" class="col-form-label">Location:</label>
                         <select id="shift_modal_location_select" class="selectpicker form-control"
@@ -81,7 +88,7 @@
 
                     <div class="form-group row">
 
-                        <label for="shift_modal_start_datetime" class="col-sm-2 col-form-label">Start Date and
+                        <label for="shift_modal_start_datetime" class="col-sm-3 col-form-label">Start Date and
                             Time:</label>
                         <div class="col-sm-4">
                             <input class="form-control datetimepicker-input" type="text" id="shift_modal_start_datetime"
@@ -90,24 +97,17 @@
                     </div>
 
                     <div class="form-group row">
-                        <label for="shift_modal_end_datetime" class="col-sm-2 col-form-label">End Date and Time:</label>
+                        <label for="shift_modal_end_datetime" class="col-sm-3 col-form-label">End Date and Time:</label>
                         <div class="col-sm-4">
                             <input class="form-control datetimepicker-input" type="text" id="shift_modal_end_datetime"
                                    data-toggle="datetimepicker" data-target="#shift_modal_end_datetime">
                         </div>
                     </div>
-                    <div class="form-group row">
-                        <label for="shift_info_input" class="col-sm-2 col-form-label">Shift Info (Optional):</label>
-                        <div class="col-sm-4">
-                            <input class="form-control" type="text" id="shift_info_input">
-                        </div>
-                    </div>
-                    <div class="form-group row">
-
+                    <div class="form-group row" id="shift_modal_repeat_until_group">
                         <label for="shift_modal_repeat_until" class="col-sm-2 col-form-label">Repeat Until
                             (Optional):</label>
                         <div class="col-sm-4">
-                            <input lass="form-control" type="date" name="Repeat Until" id="shift_modal_repeat_until">
+                            <input class="form-control" type="date" name="Repeat Until" id="shift_modal_repeat_until">
                         </div>
                     </div>
                 </form>

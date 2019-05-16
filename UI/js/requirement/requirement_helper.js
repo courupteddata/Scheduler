@@ -148,6 +148,7 @@ function requirement_load_partial_with_data(destination, data, submit_handler, c
                 if (form_data["form_id"].includes("datetime")) {
                     //Handle special case of datetime
                     if (requirement_type_number !== 6) {
+                         $("#" + form_data["form_id"], partial).datetimepicker("destroy");
                         $("#" + form_data["form_id"], partial).datetimepicker({"date": moment(new Date(data.data[form_data["data_id"]]))});
                     }
                 } else if (form_data["form_id"].includes("time")) {
@@ -179,7 +180,8 @@ function requirement_load_partial_with_data(destination, data, submit_handler, c
                 $("#requirement_is_rolling", partial).prop("checked", data.data["is_rolling"]);
                 $("#requirement_scale", partial).prop("checked", data.data["scale"]);
                 let start = moment(new Date(data.data["start"]));
-
+                $("#requirement_start_datetime", partial).datetimepicker("destroy");
+                $("#requirement_end_datetime", partial).datetimepicker("destroy");
                 $("#requirement_start_datetime", partial).datetimepicker({"date": start});
 
                 if (data.data["is_rolling"] === true) {

@@ -82,9 +82,9 @@ class ShiftManager:
 
     def add_shift(self, shift: Shift) -> int:
         with self.connection_modify_lock:
-            if shift.shift_id == -1:
-                last_row_id = self.connection.execute("INSERT INTO shift(start, end, info, location_id) "
-                                                      "VALUES (?,?,?,?)",
+            if shift.entity_id == -1:
+                last_row_id = self.connection.execute("INSERT INTO shift(entity_id, start, end, info, location_id) "
+                                                      "VALUES (NULL,?,?,?,?)",
                                                       (shift.start.isoformat(), shift.end.isoformat(),
                                                        shift.info, shift.location_id)).lastrowid
             else:
@@ -104,7 +104,7 @@ class ShiftManager:
 
     def update_shift(self, shift: Shift) -> int:
         with self.connection_modify_lock:
-            if shift.shift_id == -1:
+            if shift.entity_id == -1:
                 modified_row_count = self.connection.execute("UPDATE shift SET start=?,end=?,info=?,entity_id=NULL,"
                                                              "location_id=? WHERE id=?",
                                                              (
@@ -241,15 +241,19 @@ class ShiftManager:
                 for item in entity_id:
                     if item == -1:
                         found_empty = True
-                        add_part = "entity_id is NULL"
+                        extra_part = " OR " if len(entity_id) > 1 else ""
+                        add_part = extra_part + "entity_id is NULL"
                     else:
                         query_data += (item,)
                 where_query_string += "( " + ' OR '.join(
                     ["entity_id=?"] * (len(entity_id) - 1 if found_empty else len(entity_id))) + add_part + " )"
 
             else:
-                where_query_string += " entity_id=?"
-                query_data += (entity_id,)
+                if entity_id == -1:
+                    where_query_string += " entity_id is NULL"
+                else:
+                    where_query_string += " entity_id=?"
+                    query_data += (entity_id,)
 
         if start is not None:
             if previous:
@@ -311,7 +315,7 @@ class ShiftManager:
 
         shifts = []
         start = week[0][0].start
-        end = week[0][0].end
+        temp_end = week[0][0].end
 
         # Put the template in the shift list
         for day in week:
@@ -322,8 +326,8 @@ class ShiftManager:
                 if not self.validate_location_id(shift.location_id):
                     return -1
 
-                if shift.end > end:
-                    end = shift.end
+                if shift.end > temp_end:
+                    temp_end = shift.end
 
                 shifts.append(copy.deepcopy(shift))
 
@@ -332,7 +336,7 @@ class ShiftManager:
         |M|T|W|T|F|S|S|
         |M|T|W|T|F|S|S|
         """
-        length = (end - start).total_seconds()
+        length = (temp_end - start).total_seconds()
         seconds_in_a_week = 604800
         week_offset = length / seconds_in_a_week
         days_offset = math.ceil(week_offset) * 7
@@ -358,8 +362,8 @@ class ShiftManager:
         with self.connection_modify_lock:
             for shift in shifts:
                 if shift.entity_id == -1:
-                    count += self.connection.execute("INSERT INTO shift(start, end, info, location_id) "
-                                                     "VALUES (?,?,?,?)",
+                    count += self.connection.execute("INSERT INTO shift(entity_id,start, end, info, location_id) "
+                                                     "VALUES (NULL,?,?,?,?)",
                                                      (shift.start.isoformat(), shift.end.isoformat(), shift.info,
                                                       shift.location_id)).rowcount
                 else:
@@ -399,10 +403,16 @@ class ShiftManager:
 
         with self.connection_modify_lock:
             for shift in shifts:
-                count += self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
-                                                 "VALUES (?,?,?,?,?)",
-                                                 (shift.start.isoformat(), shift.end.isoformat(), shift.info,
-                                                  shift.entity_id, shift.location_id)).rowcount
+                if shift.entity_id == -1:
+                    count += self.connection.execute("INSERT INTO shift(start, end, info, location_id) "
+                                                     "VALUES (?,?,?,?)",
+                                                     (shift.start.isoformat(), shift.end.isoformat(), shift.info,
+                                                      shift.location_id)).rowcount
+                else:
+                    count += self.connection.execute("INSERT INTO shift(start, end, info, entity_id, location_id) "
+                                                     "VALUES (?,?,?,?,?)",
+                                                     (shift.start.isoformat(), shift.end.isoformat(), shift.info,
+                                                      shift.entity_id, shift.location_id)).rowcount
             self.connection.commit()
 
         return count
@@ -417,7 +427,7 @@ class ShiftManager:
 
     def get_empty_shift_count_by_location_id(self, location_id: int) -> int:
         count = self.connection.execute("SELECT COUNT(*) FROM shift WHERE location_id=? "
-                                        "AND entity_id=-1;", (location_id,)).fetchone()
+                                        "AND entity_id is NULL;", (location_id,)).fetchone()
 
         if count is None:
             return 0
@@ -426,9 +436,9 @@ class ShiftManager:
 
     def get_empty_shift_by_location_id(self, location_id: int) -> List[Shift]:
         return [Shift(shift_id=data[0], start=parser.parse(data[1]), end=parser.parse(data[2]),
-                      info=data[3], entity_id=data[4], location_id=data[5])
+                      info=data[3], entity_id=-1, location_id=data[5])
                 for data in self.connection.execute("SELECT id, start, end, info, entity_id, location_id "
-                                                    "FROM shift WHERE location_id=? AND entity_id=-1;",
+                                                    "FROM shift WHERE location_id=? AND entity_id is NULL;",
                                                     (location_id,))]
 
     def validate_location_id(self, location_id: int) -> bool:

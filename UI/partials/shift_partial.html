@@ -5,6 +5,9 @@
         </div>
     </div>
     <div class="row">
+        <div class="col pt-3">
+            <button class="btn btn-primary" id="shift_refresh_selects">Refresh</button>
+        </div>
         <div class="col">
             <label>
                 Window Start:
@@ -20,7 +23,7 @@
         <div class="col">
             <label>
                 Select Employee:
-                <select class="selectpicker dropdown" data-dropup-auto="false" data-live-search="true"
+                <select class="selectpicker" data-live-search="true"
                         id="shift_employee_select" title="Select Employee" multiple>
                 </select>
             </label>
@@ -28,15 +31,19 @@
         <div class="col">
             <label>
                 Select Location:
-                <select class="selectpicker dropdown" data-dropup-auto="false" data-live-search="true"
+                <select class="selectpicker" data-live-search="true"
                         id="shift_location_select" title="Select Location" multiple>
                 </select>
             </label>
         </div>
-        <div class="col pt-2">
+        <div class="col pt-3">
+            <button class="btn btn-primary" id="shift_update_button">Update</button>
+        </div>
+        <div class="col pt-3">
             <button class="btn btn-primary" id="shift_export_button">Export</button>
         </div>
     </div>
+    <div class="row" id="shift_calendar_view"></div>
 
 
 </div>

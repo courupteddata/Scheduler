@@ -71,7 +71,6 @@ function location_setup_modal() {
 }
 
 function location_update_location(location_id, location_label) {
-    console.log(location_id, location_label);
     $.ajax({
         url: '/api/v1/location/' + location_id,
         type: 'PUT',

@@ -1,3 +1,21 @@
+"""
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    scheduler.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
+"""
 from threading import Thread
 import heapq
 from . import entitymanager, shiftmanager, locationmanager, workmanager
@@ -38,6 +56,9 @@ class Scheduler:
                     cost_to_schedule = self.entity_manager.get_cost_to_schedule(person, shift.start, shift.end)
                     heapq.heappush(options, (cost_to_schedule, count, person))
 
+                if len(options) == 0:
+                    continue
+
                 cost, _, best_person = heapq.heappop(options)
 
                 if cost <= current_cost_limit:
@@ -46,11 +67,13 @@ class Scheduler:
             current_cost_limit += self.step_size
             shifts = self.shift_manager.get_empty_shift_by_location_id(location_id)
             num_empty_shifts = self.shift_manager.get_empty_shift_count_by_location_id(location_id)
-            self.work_manager.update_work_entry(work_id, num_empty_shifts/starting_empty,
+            self.work_manager.update_work_entry(work_id, num_empty_shifts / starting_empty * 100,
                                                 f"Still working... There are still {num_empty_shifts} "
                                                 f"empty shifts for location: {location_name}.")
 
-        self.work_manager.update_work_entry(work_id, num_empty_shifts / starting_empty if starting_empty != 0 else 100,
+        self.work_manager.update_work_entry(work_id,
+                                            num_empty_shifts / starting_empty * 100
+                                            if starting_empty != 0 and num_empty_shifts != 0 else 100,
                                             f"Done... There are still {num_empty_shifts} "
                                             f"empty shifts for location {location_name}.")
 

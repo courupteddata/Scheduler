@@ -1,3 +1,21 @@
+"""
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    locationapi.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
+"""
 from flask import request, jsonify, Blueprint
 
 from scheduler import locationmanager
@@ -23,20 +41,6 @@ def location_post():
         return jsonify({"error": "Missing location_label"}), 400
 
     return jsonify({"location_id": shared_location_manager.create_location(data["location_label"])})
-
-
-@location_api.route("/location/<int:location_id>", methods=['PUT'])
-def location_put(location_id: int):
-    data = request.get_json(silent=True)
-
-    if data is None:
-        return jsonify({"error": "Missing body data"}), 400
-
-    if "location_label" not in data:
-        return jsonify({"error": "location_label is missing."}), 400
-
-    return jsonify({"location_updated":
-                    shared_location_manager.update_location(location_id, data["location_label"])})
 
 
 @location_api.route("/location/<int:location_id>/entity", methods=['GET'])

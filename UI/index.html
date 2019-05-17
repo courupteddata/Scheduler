@@ -1,0 +1,93 @@
+<!--
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    index.html, Copyright 2019 Nathan Jones (Nathan@jones.one)
+
+    This page is based off of work from Jac Chalker.
+    He gave the starting template for this page, like the header and tab view (Without the dynamically loaded content part).
+-->
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="css/bootstrap-4.3.1.min.css">
+    <link rel="stylesheet" href="css/bootstrap-select-1.13.9.min.css">
+    <link rel="stylesheet" href="css/fontawesome-4.7.0.min.css">
+
+    <script src="js/libs/jquery-3.4.1.min.js"></script>
+    <script src="js/libs/popper-1.14.7.min.js"></script>
+    <script src="js/libs/bootstrap-4.3.1.min.js"></script>
+    <script src="js/libs/bootstrap-select-1.13.9.min.js"></script>
+
+    <!-- DateTime picker junk -->
+    <script src="js/libs/moment-2.22.2.min.js"></script>
+    <script src="js/libs/tempusdominus-bootstrap-4-5.0.alpha14.min.js"></script>
+    <link rel="stylesheet" href="css/tempusdominus-bootstrap-4-5.0.alpha14.min.css">
+
+    <link href='fullcalendar/core/main.css' rel='stylesheet'>
+    <link href='fullcalendar/daygrid/main.css' rel='stylesheet'>
+
+    <script src='fullcalendar/core/main.js'></script>
+    <script src='fullcalendar/interaction/main.js'></script>
+    <script src='fullcalendar/daygrid/main.js'></script>
+
+
+    <script src="js/shift_view.js"></script>
+    <script src="js/location_view.js"></script>
+    <script src="js/requirement/requirement_helper.js"></script>
+    <script src="js/employee_view.js"></script>
+    <script src="js/stats_view.js"></script>
+    <script src="js/work_view.js"></script>
+    <script src="js/main.js"></script>
+
+    <title>Hopkins Scheduler</title>
+</head>
+<body>
+<div class="jumbotron text-center">
+    <h1>Hopkins Scheduler</h1>
+</div>
+<div class="container">
+    <ul class="nav nav-tabs" id="tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#shift_view" role="tab"
+               aria-controls="messages">Shifts</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#employee_view" role="tab" aria-controls="profile">Employees</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#location_view" role="tab" aria-controls="profile">Locations</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#stats_view" role="tab" aria-controls="profile">Statistics</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#work_view" role="tab" aria-controls="profile">Progress</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" role="tabpanel" id="shift_view"></div>
+        <div class="tab-pane" role="tabpanel" id="employee_view"></div>
+        <div class="tab-pane" role="tabpanel" id="location_view"></div>
+        <div class="tab-pane" role="tabpanel" id="stats_view"></div>
+        <div class="tab-pane" role="tabpanel" id="work_view"></div>
+    </div>
+</div>
+</body>
+</html>

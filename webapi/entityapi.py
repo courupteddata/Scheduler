@@ -1,3 +1,21 @@
+"""
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    entityapi.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
+"""
 from flask import request, jsonify, Blueprint
 from dateutil import parser
 from scheduler import entitymanager, entityrequirement, requirementhelper
@@ -84,7 +102,7 @@ def entity_requirement_get(entity_id: int):
 
     return jsonify({"requirement": [{"requirement_id": entry[0],
                                      "requirement_type": entry[1],
-                                     "requirement_data": entry[2].serialize()} for entry in data]})
+                                     "data": entry[2].serialize()} for entry in data]})
 
 
 @entity_api.route("/entity/<int:entity_id>/requirement", methods=['POST'])
@@ -112,12 +130,17 @@ def entity_requirement_post(entity_id: int):
         return jsonify({"error": "missing cost field"}), 400
     cost = data["data"]["cost"]
 
+    try:
+        cost = float(cost)
+    except ValueError:
+        return jsonify({"error": "cost needs to be a number"}), 400
+
     if "label" not in data["data"]:
         return jsonify({"error": "missing label field"}), 400
     label = data["data"]["label"]
 
     if data["requirement_type"] == requirementhelper.RequirementType.BASE.name:
-        requirement = entityrequirement.EntityRequirement(cost, label)
+        requirement = entityrequirement.EntityRequirement(label, cost)
     elif data["requirement_type"] == requirementhelper.RequirementType.TIMEFRAME.name:
         time_frame_types = [entityrequirement.TimeFrameRequirement.Types.DATE_RANGE.name,
                             entityrequirement.TimeFrameRequirement.Types.DAY_OF_WEEK.name,
@@ -143,8 +166,13 @@ def entity_requirement_post(entity_id: int):
     elif data["requirement_type"] == requirementhelper.RequirementType.RELATIVE.name:
         if "during" not in data["data"] and "after" not in data["data"]:
             return jsonify({"error": "Missing during and after boolean flag (pick one to be true)"}), 400
-        if "distance" not in data["data"] or not isinstance(data["data"]["distance"], (int, float)):
-            return jsonify({"error": "Missing distance in hours (float) or invalid data passed"}), 400
+        if "distance" not in data["data"]:
+            return jsonify({"error": "Missing distance in hours (float)"}), 400
+        try:
+            float(data["data"]["distance"])
+        except ValueError:
+            return jsonify({"error": "Invalid distance value."}), 400
+
         during = data["data"]["during"]
         after = data["data"]["after"]
         if (during and after) or (not during and not after):
@@ -169,12 +197,12 @@ def entity_requirement_post(entity_id: int):
 
         if "length" not in data["data"] and data["data"]["is_rolling"]:
             error_message += "Missing length (float, hours) "
-        else:
+        elif not data["data"]["is_rolling"]:
             data["data"]["length"] = 0
 
         if "end" not in data["data"] and not data["data"]["is_rolling"]:
             error_message += "Missing end (ISO8601 datetime format)"
-        else:
+        elif data["data"]["is_rolling"]:
             data["data"]["end"] = "0001-01-01T00:00:00"
 
         if error_message != "":

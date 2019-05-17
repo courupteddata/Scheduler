@@ -1,5 +1,24 @@
+"""
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    locationmanager.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
+"""
 from typing import List, Union
 from . import shared
+from threading import Lock
 
 
 class Location:
@@ -26,6 +45,7 @@ class LocationManager:
     def __init__(self):
         self.connection = shared.DB().get_connection()
         shared.DB.create_all_tables()
+        self.connection_modify_lock = Lock()
 
     def create_location(self, label: str) -> int:
         """
@@ -33,15 +53,17 @@ class LocationManager:
         :param label: the location to add
         :return: returns the integer id of the item just added
         """
-        inserted_id = self.connection.execute('INSERT INTO location(label) VALUES (?);', (label,)).lastrowid
-        self.connection.commit()
+        with self.connection_modify_lock:
+            inserted_id = self.connection.execute('INSERT INTO location(label) VALUES (?);', (label,)).lastrowid
+            self.connection.commit()
 
         return inserted_id
 
     def update_location(self, location_id: int, new_label: str) -> bool:
-        modified_row_count = self.connection.execute('UPDATE location SET label=? WHERE id=?',
-                                                     (new_label, location_id)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute('UPDATE location SET label=? WHERE id=?',
+                                                         (new_label, location_id)).rowcount
+            self.connection.commit()
 
         return modified_row_count > 0
 
@@ -51,8 +73,9 @@ class LocationManager:
         :param location_id: location to remove
         :return: True if the location was removed, false otherwise (like if it was never a valid location)
         """
-        modified_row_count = self.connection.execute('DELETE FROM location WHERE id=?;', (location_id,)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute('DELETE FROM location WHERE id=?;', (location_id,)).rowcount
+            self.connection.commit()
         return modified_row_count > 0
 
     def get_locations(self) -> List[Location]:
@@ -120,10 +143,11 @@ class LocationManager:
             else:
                 modified_list.append((entity_id, location_id))
 
-        row_count = self.connection.executemany('INSERT OR IGNORE INTO entity_location'
-                                                '(entity_id, location_id) VALUES (?, ?);',
-                                                modified_list).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            row_count = self.connection.executemany('INSERT OR IGNORE INTO entity_location'
+                                                    '(entity_id, location_id) VALUES (?, ?);',
+                                                    modified_list).rowcount
+            self.connection.commit()
         return row_count
 
     def remove_location_from_entity(self, location_id: Union[int, List[int]], entity_id: Union[int, List[int]]) -> int:
@@ -150,7 +174,8 @@ class LocationManager:
             else:
                 modified_list.append((entity_id, location_id))
 
-        row_count = self.connection.executemany('DELETE from entity_location WHERE entity_id=? AND location_id=?;',
-                                                modified_list).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            row_count = self.connection.executemany('DELETE from entity_location WHERE entity_id=? AND location_id=?;',
+                                                    modified_list).rowcount
+            self.connection.commit()
         return row_count

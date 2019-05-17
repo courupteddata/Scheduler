@@ -1,0 +1,47 @@
+<!--
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    work_partial.html, Copyright 2019 Nathan Jones (Nathan@jones.one)
+-->
+<div>
+    <div class="row">
+        <div class="col">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col pt-3">
+            <button class="btn btn-primary" id="work_refresh">Refresh Table</button>
+        </div>
+        <div class="col pt-3">
+            <button class="btn btn-primary float-right" id="work_fill_schedule_button">Fill Schedules</button>
+        </div>
+    </div>
+    <div class="row pt-3">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Work ID</th>
+                <th scope="col">Progress</th>
+                <th scope="col">Message</th>
+                <th scope="col">Delete Entry</th>
+            </tr>
+            </thead>
+            <tbody id="work_table_body">
+            </tbody>
+        </table>
+    </div>
+</div>

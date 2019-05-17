@@ -79,7 +79,7 @@ class EntityRequirement:
 
     @classmethod
     def unserialize(cls, data: dict):
-        return cls(data['label'], data['cost'], data['is_relative'])
+        return cls(data['label'], float(data['cost']), str(data['is_relative']).lower() == "true")
 
 
 class TimeFrameRequirement(EntityRequirement):
@@ -124,10 +124,10 @@ class TimeFrameRequirement(EntityRequirement):
 
     @classmethod
     def unserialize(cls, data: dict):
-        created = cls(data["label"], data["cost"])
+        created = cls(data["label"], float(data["cost"]))
 
         if data['time_frame_type'] == TimeFrameRequirement.Types.DAY_OF_WEEK.name:
-            created._day_of_week = data["day_of_week"]
+            created._day_of_week = int(data["day_of_week"])
             created._time_frame_type = TimeFrameRequirement.Types.DAY_OF_WEEK
         elif data['time_frame_type'] == TimeFrameRequirement.Types.DATE_RANGE.name:
             created._datetime_start = parser.parse(data["datetime_start"])
@@ -233,10 +233,10 @@ class RelativeRequirement(EntityRequirement):
 
     @classmethod
     def unserialize(cls, data: dict):
-        created = cls(data["label"], data["cost"])
-        created._during = data["during"]
-        created._after = data["after"]
-        created._distance = data["distance"]
+        created = cls(data["label"], float(data["cost"]))
+        created._during = str(data["during"]).lower() == "true"
+        created._after = str(data["after"]).lower() == "true"
+        created._distance = float(data["distance"])
 
         return created
 
@@ -315,12 +315,12 @@ class TotalsRequirement(EntityRequirement):
 
     @classmethod
     def unserialize(cls, data: dict):
-        created = cls(data["label"], data["cost"])
-        created.total_requirement = data["total_requirement"]
-        created.is_rolling = data["is_rolling"]
-        created._scale = data["scale"]
+        created = cls(data["label"], float(data["cost"]))
+        created.total_requirement = float(data["total_requirement"])
+        created.is_rolling = str(data["is_rolling"]).lower() == "true"
+        created._scale = str(data["scale"]).lower() == "true"
         created._start = parser.parse(data["start"])
-        created._length = timedelta(hours=data["length"])
+        created._length = timedelta(hours=float(data["length"]))
         created._end = parser.parse(data["end"])
 
         return created

@@ -1,6 +1,25 @@
+"""
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    entitymanager.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
+"""
 from typing import Tuple, Union, List, TYPE_CHECKING, Dict
 from . import shared, entitystate
 from datetime import datetime
+from threading import Lock
 
 from . import entity, requirementhelper
 
@@ -14,22 +33,26 @@ class EntityManager:
     def __init__(self):
         self.connection = shared.DB().get_connection()
         shared.DB.create_all_tables()
+        self.connection_modify_lock = Lock()
 
     def create_entity(self, name: str) -> int:
-        inserted_id = self.connection.execute('INSERT INTO entity(name) VALUES (?);', (name,)).lastrowid
-        self.connection.commit()
+        with self.connection_modify_lock:
+            inserted_id = self.connection.execute('INSERT INTO entity(name) VALUES (?);', (name,)).lastrowid
+            self.connection.commit()
 
         return inserted_id
 
     def update_entity_name(self, entity_id: int, name: str):
-        modified_row_count = self.connection.execute('UPDATE entity SET name=? WHERE id=?;', (name, entity_id)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute('UPDATE entity SET name=? WHERE id=?;', (name, entity_id)).rowcount
+            self.connection.commit()
 
         return modified_row_count
 
     def delete_entity(self, entity_id: int) -> bool:
-        modified_row_count = self.connection.execute('DELETE FROM entity WHERE id=?;', (entity_id,)).rowcount
-        self.connection.commit()
+        with self.connection_modify_lock:
+            modified_row_count = self.connection.execute('DELETE FROM entity WHERE id=?;', (entity_id,)).rowcount
+            self.connection.commit()
 
         return modified_row_count > 0
 
@@ -67,7 +90,7 @@ class EntityManager:
         for req in ent.requirements:
             if req.applies(state, shift_start, shift_end):
                 req_count += 1
-                total_cost += req.cost
+                total_cost += float(req.cost)
 
         if req_count == 0:
             return 0
@@ -78,16 +101,17 @@ class EntityManager:
     Requirement management of an entity
     """
     def add_requirement_to_entity(self, entity_id: int, requirement: 'entityrequirement.EntityRequirement') -> int:
-        return requirementhelper.store_requirement(self.connection, entity_id, requirement)
+        return requirementhelper.store_requirement(self.connection, entity_id, requirement, self.connection_modify_lock)
 
     def delete_requirement(self, requirement_id: Union[int, List[int]]) -> int:
 
-        if isinstance(requirement_id, list):
-            to_return = self.connection.executemany("DELETE FROM requirement WHERE id=?", requirement_id).rowcount
-        else:
-            to_return = self.connection.execute("DELETE FROM requirement WHERE id=?", (requirement_id,)).rowcount
+        with self.connection_modify_lock:
+            if isinstance(requirement_id, list):
+                to_return = self.connection.executemany("DELETE FROM requirement WHERE id=?", requirement_id).rowcount
+            else:
+                to_return = self.connection.execute("DELETE FROM requirement WHERE id=?", (requirement_id,)).rowcount
+            self.connection.commit()
 
-        self.connection.commit()
         return to_return
 
     def get_requirements_for_entity(self, entity_id: int) -> \
@@ -117,11 +141,12 @@ class EntityManager:
         if len(locations) == 0:
             return []
 
-        data = [self.connection.execute('SELECT id,label FROM location '
-                                        'WHERE id=?;', loc).fetchone() for loc in locations]
+        data = []
 
-        if data is None:
-            return []
+        for loc in locations:
+            temp = self.connection.execute('SELECT id,label FROM location WHERE id=?;', loc).fetchone()
+            if temp is not None:
+                data.append(temp)
 
         return [{"location_id": item[0], "location_label": item[1]} for item in data]
 

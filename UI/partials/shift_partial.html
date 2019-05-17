@@ -1,0 +1,141 @@
+<!--
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    shift_partial.html, Copyright 2019 Nathan Jones (Nathan@jones.one)
+-->
+<div>
+    <div class="row">
+        <div class="col">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col pt-3">
+            <button class="btn btn-primary" id="shift_refresh_selects">Refresh</button>
+        </div>
+        <div class="col">
+            <label>
+                Window Start:
+                <input type="date" name="Window Start" id="shift_window_start">
+            </label>
+        </div>
+        <div class="col">
+            <label>
+                Window End:
+                <input type="date" name="Window End" id="shift_window_end">
+            </label>
+        </div>
+        <div class="col">
+            <label>
+                Select Employee:
+                <select class="selectpicker" data-live-search="true"
+                        id="shift_employee_select" title="Select Employee" multiple>
+                </select>
+            </label>
+        </div>
+        <div class="col">
+            <label>
+                Select Location:
+                <select class="selectpicker" data-live-search="true"
+                        id="shift_location_select" title="Select Location" multiple>
+                </select>
+            </label>
+        </div>
+        <div class="col pt-3">
+            <button class="btn btn-primary" id="shift_update_button">Update</button>
+        </div>
+        <div class="col pt-3">
+            <button class="btn btn-primary" id="shift_export_button">Export</button>
+        </div>
+    </div>
+    <div id="shift_calendar_view"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="shift_modal" tabindex="-1" role="dialog" aria-labelledby="shift_modify"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shift_modal_label">Shift</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+
+                    <div class="form-group" id="shift_modal_id_group">
+                        <label for="shift_modal_shift_id" class="col-form-label">Shift ID:</label>
+                        <input type="text" class="form-control" id="shift_modal_shift_id" readonly>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="shift_info_input" class="col-sm-3 col-form-label">Shift Info (Optional):</label>
+                        <div class="col-sm-4">
+                            <input class="form-control" type="text" id="shift_info_input">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shift_modal_location_select" class="col-form-label">Location:</label>
+                        <select id="shift_modal_location_select" class="selectpicker form-control"
+                                data-live-search="true" multiple>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shift_modal_employee_select" class="col-form-label">Employee:</label>
+                        <select id="shift_modal_employee_select" class="selectpicker form-control"
+                                data-live-search="true">
+                        </select>
+                    </div>
+
+                    <div class="form-group row">
+
+                        <label for="shift_modal_start_datetime" class="col-sm-3 col-form-label">Start Date and
+                            Time:</label>
+                        <div class="col-sm-4">
+                            <input class="form-control datetimepicker-input" type="text" id="shift_modal_start_datetime"
+                                   data-toggle="datetimepicker" data-target="#shift_modal_start_datetime">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label for="shift_modal_end_datetime" class="col-sm-3 col-form-label">End Date and Time:</label>
+                        <div class="col-sm-4">
+                            <input class="form-control datetimepicker-input" type="text" id="shift_modal_end_datetime"
+                                   data-toggle="datetimepicker" data-target="#shift_modal_end_datetime">
+                        </div>
+                    </div>
+                    <div class="form-group row" id="shift_modal_repeat_until_group">
+                        <label for="shift_modal_repeat_until" class="col-sm-2 col-form-label">Repeat Until
+                            (Optional):</label>
+                        <div class="col-sm-4">
+                            <input class="form-control" type="date" name="Repeat Until" id="shift_modal_repeat_until">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger mr-auto" data-dismiss="modal" id="shift_delete">DELETE
+                </button>
+                <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> -->
+                <button type="button" class="btn btn-primary" data-dismiss="modal" id="shift_submit">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>

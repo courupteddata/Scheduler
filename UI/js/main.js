@@ -1,4 +1,4 @@
-"""
+/*
     This file is part of Scheduler.
 
     Scheduler is free software: you can redistribute it and/or modify
@@ -14,18 +14,12 @@
     You should have received a copy of the GNU General Public License
     along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
 
-    entity.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
-"""
-from typing import List, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    # Needed only for typing
-    from . import entityrequirement
-
-
-class Entity:
-
-    def __init__(self, name: str, entity_id: int):
-        self.name = name
-        self.entity_id = entity_id
-        self.requirements: List['entityrequirement.EntityRequirement'] = []
+    main.js, Copyright 2019 Nathan Jones (Nathan@jones.one)
+*/
+document.addEventListener('DOMContentLoaded', function () {
+    shift_load();
+    location_load();
+    stats_load();
+    employee_load();
+    work_load();
+});

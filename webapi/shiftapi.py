@@ -1,3 +1,21 @@
+"""
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    shiftapi.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
+"""
 from flask import request, jsonify, Blueprint, make_response
 from dateutil import parser
 from datetime import timedelta
@@ -11,9 +29,17 @@ shared_shift_manager = shiftmanager.ShiftManager()
 @shift_api.route("/shift", methods=['GET'])
 def shift_get():
     location_id = request.args.get('location_id', type=int, default=-1)
+
+    if location_id != -1:
+        location_id = request.args.getlist('location_id', type=int)
+
     start = request.args.get('start', type=str, default=None)
     end = request.args.get('end', type=str, default=None)
     entity_id = request.args.get('entity_id', type=int, default=-2)
+
+    if entity_id != -2:
+        entity_id = request.args.getlist('entity_id', type=int)
+
     export = request.args.get('export', type=bool, default=False)
 
     if start is not None:

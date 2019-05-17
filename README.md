@@ -1,4 +1,4 @@
-# Authors
+# Group Members
 - Alexander Whitehead
 - Yajan Khanal
 - Nathan Jones
@@ -6,4 +6,4 @@
 - Levan Sulimanov
 
 # Scheduler
-A group repository will be used when creating the PA scheduler.
+A repository to store the scheduling application and its development.

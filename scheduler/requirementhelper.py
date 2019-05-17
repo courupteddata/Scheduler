@@ -1,10 +1,31 @@
+"""
+    This file is part of Scheduler.
+
+    Scheduler is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Scheduler is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Scheduler.  If not, see <https://www.gnu.org/licenses/>.
+
+    requirementhelper.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
+"""
 from typing import TYPE_CHECKING, Union, cast
 from . import entityrequirement
+
 from enum import Enum, auto
+
 import json
 
 if TYPE_CHECKING:
     import sqlite3
+    from threading import Lock
 
 
 class RequirementType(Enum):
@@ -53,7 +74,8 @@ def rebuild_from_data(req_type: str, json_data: str, requirement_id: int = -1) -
 
 def store_requirement(db_connection: 'sqlite3.Connection',
                       entity_id: int,
-                      requirement: entityrequirement.EntityRequirement) -> int:
+                      requirement: entityrequirement.EntityRequirement,
+                      modify_lock: 'Lock') -> int:
 
     requirement_type = RequirementType.BASE
 
@@ -69,10 +91,11 @@ def store_requirement(db_connection: 'sqlite3.Connection',
     else:
         data = requirement.serialize()
 
-    updated_row = db_connection.execute("INSERT INTO requirement(entity_id, type, json_data) VALUES (?, ?, ?);",
-                                        (entity_id, requirement_type.name, json.dumps(data))).lastrowid
+    with modify_lock:
+        updated_row = db_connection.execute("INSERT INTO requirement(entity_id, type, json_data) VALUES (?, ?, ?);",
+                                            (entity_id, requirement_type.name, json.dumps(data))).lastrowid
 
-    db_connection.commit()
+        db_connection.commit()
 
     return updated_row
 

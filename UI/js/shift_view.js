@@ -152,7 +152,7 @@ function shift_fill_location_select(select_element) {
             output += '<option value="' + location.location_id + '">' + location.location_label + '</option>'
         });
 
-        select_element.append(output).selectpicker('refresh');
+        select_element.empty().append(output).selectpicker('refresh');
     });
 }
 

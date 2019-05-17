@@ -43,6 +43,18 @@ def location_post():
     return jsonify({"location_id": shared_location_manager.create_location(data["location_label"])})
 
 
+@location_api.route("/location/<int:location_id>", methods=['PUT'])
+def location_put(location_id: int):
+    data = request.get_json(silent=True)
+
+    if data is None:
+        return jsonify({"error": "Missing body data"}), 400
+    if "location_label" not in data:
+        return jsonify({"error": "Missing location_label"}), 400
+
+    return jsonify({"Updated": shared_location_manager.update_location(location_id, data["location_label"])})
+
+
 @location_api.route("/location/<int:location_id>/entity", methods=['GET'])
 def location_get_entity_id(location_id: int):
     return jsonify({"entity_ids": shared_location_manager.get_entity_ids_by_location_id(location_id)})

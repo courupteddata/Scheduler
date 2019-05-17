@@ -65,7 +65,7 @@ class DB:
                         'message TEXT);'
 
     def __init__(self):
-        self.db = sqlite3.connect("scheduler.db", check_same_thread=False)
+        self.db = sqlite3.connect("scheduler.db", check_same_thread=False, timeout=60)
         self.db.execute(DB.ENFORCE_CONSTRAINT)
         self.db.commit()
 

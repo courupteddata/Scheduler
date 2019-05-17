@@ -51,5 +51,9 @@ def get_main_page():
 if __name__ == '__main__':
     # In future add Threaded=True for possible performance enhancement
     webbrowser.open_new_tab("http://127.0.0.1:5000")
+    print("Scheduler  Copyright (C) 2019  Nathan Jones (Nathan@jones.one)\n"
+          "This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE file\n"
+          "This is free software, and you are welcome to redistribute it\n"
+          "under certain conditions, see LICENSE file.")
     app.run()
 

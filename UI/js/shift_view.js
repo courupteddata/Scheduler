@@ -278,8 +278,10 @@ function shift_prepare_modal(purpose, info) {
         modal_shift_end_datetime.datetimepicker("destroy");
         modal_shift_info_input.text("");
 
+
         if (purpose === "Edit") {
             let event = info.event;
+            modal_shift_repeat_till.val("");
 
             let modal_shift_info = event.extendedProps.info;
             let modal_shift_id = event.id;

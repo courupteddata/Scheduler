@@ -360,6 +360,7 @@ class TotalsRequirement(EntityRequirement):
             while (window_start <= shift_start <= window_start + self._length) is not True:
                 window_start += self._length
             self._hours_worked = entity_state.hours_worked_in(window_start, window_start + self._length)
+
             return True
         else:
             if self._start <= shift_start <= self._end:
@@ -373,4 +374,7 @@ class TotalsRequirement(EntityRequirement):
         if self._scale:
             return (self._hours_worked / self.total_requirement) * self._cost
 
-        return self._cost
+        if self._hours_worked >= self.total_requirement:
+            return self._cost
+        else:
+            return 0

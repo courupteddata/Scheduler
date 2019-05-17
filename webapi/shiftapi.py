@@ -17,7 +17,7 @@
     shiftapi.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
 """
 from flask import request, jsonify, Blueprint, make_response
-from dateutil import parser
+from dateutil import parser, tz
 from datetime import timedelta
 from scheduler import shiftmanager
 
@@ -63,12 +63,24 @@ def shift_get():
 
     empty = "Empty"
 
-    for shift in shifts:
-        start_time = shift.start.time().strftime("%I:%M %p")
-        start_date = shift.start.date().strftime("%m/%d/%Y")
+    from_zone = tz.gettz("UTC")
+    to_zone = tz.tzlocal()
 
-        end_time = shift.end.time().strftime("%I:%M %p")
-        end_date = shift.end.date().strftime("%m/%d/%Y")
+    for shift in shifts:
+        shift_start = shift.start
+        shift_end = shift.end
+
+        shift_start.replace(tzinfo=from_zone)
+        shift_end.replace(tzinfo=from_zone)
+
+        shift_start = shift_start.astimezone(to_zone)
+        shift_end = shift_end.astimezone(to_zone)
+
+        start_time = shift_start.time().strftime("%I:%M %p")
+        start_date = shift_start.date().strftime("%m/%d/%Y")
+
+        end_time = shift_end.time().strftime("%I:%M %p")
+        end_date = shift_end.date().strftime("%m/%d/%Y")
 
         data += f"\"{shared_shift_manager.get_entity_name(shift.entity_id) if shift.entity_id != -1 else empty}\"," \
             f"\"{start_date}\",\"{start_time}\",\"{end_date}\",\"{end_time}\",\"{shift.info}\"," \

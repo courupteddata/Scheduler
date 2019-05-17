@@ -70,21 +70,24 @@ function shift_create_calendar() {
             currentTimezone: 'local',
 
             eventDrop: function (info) {
-                if (!confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?")) {
-                    info.revert();
-                } else {
-                    shift_add_shift({
-                        "entity_id": info.event.extendedProps.entity_id,
-                        "location_id": info.event.extendedProps.location_id,
-                        "info": info.event.extendedProps.info,
-                        "start": new Date(info.event.start).toISOString(),
-                        "end": new Date(info.event.end).toISOString()
-                    }, function () {
-                        shift_delete_shift(info.event.id, function () {
-                            shift_update_events_list();
-                        })
-                    });
-                }
+                shift_display_confirm("Are you sure you want to move this shift to " + info.event.start.toLocaleString() + "?", function (result) {
+                    if (!result) {
+                        info.revert();
+                    } else {
+                        shift_add_shift({
+                            "entity_id": info.event.extendedProps.entity_id,
+                            "location_id": info.event.extendedProps.location_id,
+                            "info": info.event.extendedProps.info,
+                            "start": new Date(info.event.start).toISOString(),
+                            "end": new Date(info.event.end).toISOString()
+                        }, function () {
+                            shift_delete_shift(info.event.id, function () {
+                                shift_update_events_list();
+                            })
+                        });
+                    }
+                });
+
             },
             eventClick: function (info) {
                 shift_prepare_modal("Edit", info);
@@ -149,7 +152,7 @@ function shift_fill_location_select(select_element) {
             output += '<option value="' + location.location_id + '">' + location.location_label + '</option>'
         });
 
-        select_element.append(output).selectpicker('refresh');
+        select_element.empty().append(output).selectpicker('refresh');
     });
 }
 
@@ -275,8 +278,10 @@ function shift_prepare_modal(purpose, info) {
         modal_shift_end_datetime.datetimepicker("destroy");
         modal_shift_info_input.text("");
 
+
         if (purpose === "Edit") {
             let event = info.event;
+            modal_shift_repeat_till.val("");
 
             let modal_shift_info = event.extendedProps.info;
             let modal_shift_id = event.id;
@@ -388,7 +393,7 @@ function shift_fill_modal_employee_select(select_element, location_select, succe
                     if (queries.length === 1) {
                         let element = arguments[0];
                         output += '<option data-tokens="' + element.entity_name + '" value="' + element.entity_id + '">' + element.entity_name + '</option>';
-                    } else if(queries.length > 1) {
+                    } else if (queries.length > 1) {
                         for (let data of arguments) {
                             if (data[0] !== undefined) {
                                 let element = data[0];
@@ -470,4 +475,30 @@ function shift_handle_submit(shift_id, selected_locations, selected_employee, se
     $.when.apply($, requests).then(function () {
         shift_update_events_list();
     });
+}
+
+function shift_display_confirm(message, callback) {
+    let confirm_modal = shift_view_partial.find("#shift_confirm_modal");
+
+    confirm_modal.find("#shift_confirm_message").text(message);
+    confirm_modal.find("#shift_confirm_close_button").off("click").on("click", function () {
+        callback(false);
+        confirm_modal.modal("hide");
+    });
+
+    confirm_modal.find("#shift_confirm_yes").off("click").on("click", function () {
+        callback(true);
+        confirm_modal.modal("hide");
+    });
+
+    confirm_modal.find("#shift_confirm_no").off("click").on("click", function () {
+        callback(false);
+        confirm_modal.modal("hide");
+    });
+
+    confirm_modal.modal({
+        "backdrop": "static",
+        "keyboard": false
+    });
+
 }

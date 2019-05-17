@@ -18,6 +18,7 @@
 """
 from flask import Flask, send_from_directory
 from webapi import entityapi, locationapi, shiftapi, schedulerapi, workapi
+import webbrowser
 
 app = Flask(__name__)
 API_PREFIX = "/api/v1"
@@ -49,4 +50,6 @@ def get_main_page():
 
 if __name__ == '__main__':
     # In future add Threaded=True for possible performance enhancement
+    webbrowser.open_new_tab("http://127.0.0.1:5000")
     app.run()
+

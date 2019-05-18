@@ -98,7 +98,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="shift_modal_employee_select" class="col-form-label">Employee:</label>
+                        <label for="shift_modal_employee_select" class="col-form-label">Employee (Optional):</label>
                         <select id="shift_modal_employee_select" class="selectpicker form-control"
                                 data-live-search="true">
                         </select>
@@ -122,10 +122,26 @@
                         </div>
                     </div>
                     <div class="form-group row" id="shift_modal_repeat_until_group">
-                        <label for="shift_modal_repeat_until" class="col-sm-2 col-form-label">Repeat Until
+                        <label for="shift_modal_repeat_until" class="col-sm-3 col-form-label">Repeat Until
                             (Optional):</label>
                         <div class="col-sm-4">
                             <input class="form-control" type="date" name="Repeat Until" id="shift_modal_repeat_until">
+                        </div>
+                    </div>
+                    <div class="form-group row" id="shift_modal_repeat_day_of_week_group">
+                        <label for="shift_modal_repeat_day_of_week" class="col-sm-3 col-form-label">Repeat Day of Week
+                            (Optional):</label>
+                        <div class="col-sm-4">
+                            <select id="shift_modal_repeat_day_of_week" class="form-control selectpicker"
+                                    title="Pick a Day of Week (Optional)" multiple>
+                                <option value="0">Sunday</option>
+                                <option value="1">Monday</option>
+                                <option value="2">Tuesday</option>
+                                <option value="3">Wednesday</option>
+                                <option value="4">Thursday</option>
+                                <option value="5">Friday</option>
+                                <option value="6">Saturday</option>
+                            </select>
                         </div>
                     </div>
                 </form>
@@ -163,7 +179,9 @@
                     </button>
                 </div>
                 <div class="col-3">
-                    <button type="button" class="btn btn-primary px-5 ml-4" data-dismiss="modal" id="shift_confirm_no">No</button>
+                    <button type="button" class="btn btn-primary px-5 ml-4" data-dismiss="modal" id="shift_confirm_no">
+                        No
+                    </button>
                 </div>
                 <div class="col-3"></div>
             </div>

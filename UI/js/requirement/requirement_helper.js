@@ -148,7 +148,7 @@ function requirement_load_partial_with_data(destination, data, submit_handler, c
                 if (form_data["form_id"].includes("datetime")) {
                     //Handle special case of datetime
                     if (requirement_type_number !== 6) {
-                         $("#" + form_data["form_id"], partial).datetimepicker("destroy");
+                        $("#" + form_data["form_id"], partial).datetimepicker("destroy");
                         $("#" + form_data["form_id"], partial).datetimepicker({"date": moment(new Date(data.data[form_data["data_id"]]))});
                     }
                 } else if (form_data["form_id"].includes("time")) {
@@ -244,15 +244,15 @@ function requirement_get_submit_data(requirement_type_number, element) {
     }
 
     if (requirement_type_number === 6) {
-         let start = moment(new Date(data.data["start"]));
-         let end = moment(new Date(data.data["end"]));
+        let start = moment(new Date(data.data["start"]));
+        let end = moment(new Date(data.data["end"]));
 
-         data.data["scale"] = element.find("#requirement_scale").is(":checked") === true;
-         data.data["is_rolling"] = element.find("#requirement_is_rolling").is(":checked") === true;
+        data.data["scale"] = element.find("#requirement_scale").is(":checked") === true;
+        data.data["is_rolling"] = element.find("#requirement_is_rolling").is(":checked") === true;
 
-         if(data.data["is_rolling"]) {
+        if (data.data["is_rolling"]) {
             data.data["length"] = moment.duration(end.diff(start)).asHours();
-         }
+        }
     }
     console.log("Getting Data:");
     console.log(data);

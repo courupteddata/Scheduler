@@ -42,10 +42,10 @@ class Location:
 
 class LocationManager:
 
-    def __init__(self):
+    def __init__(self, shared_lock: Lock = Lock()):
         self.connection = shared.DB().get_connection()
         shared.DB.create_all_tables()
-        self.connection_modify_lock = Lock()
+        self.connection_modify_lock = shared_lock
 
     def create_location(self, label: str) -> int:
         """

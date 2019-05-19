@@ -18,6 +18,7 @@
 """
 from flask import Flask, send_from_directory
 from webapi import entityapi, locationapi, shiftapi, schedulerapi, workapi
+from threading import Lock
 import webbrowser
 
 app = Flask(__name__)
@@ -28,14 +29,21 @@ app.register_blueprint(shiftapi.shift_api, url_prefix=API_PREFIX)
 app.register_blueprint(schedulerapi.scheduler_api, url_prefix=API_PREFIX)
 app.register_blueprint(workapi.work_api, url_prefix=API_PREFIX)
 
-# look into https://www.getpostman.com/postman
+shared_lock = Lock()
+
+
 @app.before_first_request
 def prepare_api():
     """
-    Called to prepare the API with local storage
+    Called to prepare the API with a shared lock
     :return:
     """
-    pass
+    entityapi.shared_entity_manager.connection_modify_lock = shared_lock
+    locationapi.shared_location_manager.connection_modify_lock = shared_lock
+    shiftapi.shared_shift_manager.connection_modify_lock = shared_lock
+    workapi.shared_work_manager.connection_modify_lock = shared_lock
+
+    schedulerapi.shared_scheduler.set_lock(shared_lock)
 
 
 @app.route("/<path:path>")

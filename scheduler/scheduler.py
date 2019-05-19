@@ -16,7 +16,7 @@
 
     scheduler.py, Copyright 2019 Nathan Jones (Nathan@jones.one)
 """
-from threading import Thread
+from threading import Thread, Lock
 import heapq
 from . import entitymanager, shiftmanager, locationmanager, workmanager
 from typing import List, Tuple
@@ -24,14 +24,20 @@ from typing import List, Tuple
 
 class Scheduler:
 
-    def __init__(self, max_cost: float = 10, step_size: float = .5):
+    def __init__(self, max_cost: float = 10, step_size: float = .5, shared_lock: Lock = Lock()):
         # Use this to add and modify all of the entities
-        self.entity_manager = entitymanager.EntityManager()
-        self.shift_manager = shiftmanager.ShiftManager()
-        self.location_manager = locationmanager.LocationManager()
-        self.work_manager = workmanager.WorkManager()
+        self.entity_manager = entitymanager.EntityManager(shared_lock)
+        self.shift_manager = shiftmanager.ShiftManager(shared_lock)
+        self.location_manager = locationmanager.LocationManager(shared_lock)
+        self.work_manager = workmanager.WorkManager(shared_lock)
         self.step_size = step_size
         self.max_cost = max_cost
+
+    def set_lock(self, shared_lock: Lock):
+        self.entity_manager.connection_modify_lock = shared_lock
+        self.shift_manager.connection_modify_lock = shared_lock
+        self.location_manager.connection_modify_lock = shared_lock
+        self.work_manager.connection_modify_lock = shared_lock
 
     def fill_schedule_for_location(self, location_id: int, work_id: int) -> int:
         current_cost_limit = self.step_size

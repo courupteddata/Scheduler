@@ -75,10 +75,10 @@ class Shift:
 
 
 class ShiftManager:
-    def __init__(self):
+    def __init__(self, shared_lock: Lock = Lock()):
         shared.DB.create_all_tables()
         self.connection = shared.DB().get_connection()
-        self.connection_modify_lock = Lock()
+        self.connection_modify_lock = shared_lock
 
     def add_shift(self, shift: Shift) -> int:
         with self.connection_modify_lock:

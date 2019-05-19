@@ -254,8 +254,6 @@ function requirement_get_submit_data(requirement_type_number, element) {
             data.data["length"] = moment.duration(end.diff(start)).asHours();
         }
     }
-    console.log("Getting Data:");
-    console.log(data);
 
     return data;
 }

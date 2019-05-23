@@ -21,6 +21,7 @@ from datetime import datetime, time, timedelta
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Tuple
 from dateutil import parser
+from math import ceil
 
 if TYPE_CHECKING:
     # Needed only for typing
@@ -356,9 +357,16 @@ class TotalsRequirement(EntityRequirement):
             return False
 
         if self.is_rolling:
+            seconds_in_a_week = 604800
+            week_offset = self._length.total_seconds() / seconds_in_a_week
+            days_offset = ceil(week_offset) * 7
+            shift_offset_increment = timedelta(days=days_offset)
+
             window_start: datetime = self._start
             while (window_start <= shift_start <= window_start + self._length) is not True:
-                window_start += self._length
+                if window_start > shift_end:  # Window has gone past the shift window, so stop and it doesn't apply
+                    return False
+                window_start += shift_offset_increment
             self._hours_worked = entity_state.hours_worked_in(window_start, window_start + self._length)
 
             return True

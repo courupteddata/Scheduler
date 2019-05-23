@@ -26,6 +26,7 @@ function stats_load() {
         stats_populate_employee_list();
         stats_handle_employee_change();
         stats_handle_window_change();
+        stats_handle_refresh_click();
     });
 
 }
@@ -49,7 +50,13 @@ function stats_populate_employee_list() {
 function stats_handle_employee_change() {
     $("#stats_employee_select").on('changed.bs.select', function (e) {
         stats_selected_id = $(e.currentTarget).val();
-        update_table();
+        stats_update_table();
+    });
+}
+
+function stats_handle_refresh_click(){
+    $("#stats_refresh_employee_select").on('click', function(){
+        stats_populate_employee_list();
     });
 }
 
@@ -60,7 +67,7 @@ function stats_handle_window_change() {
         } else {
             stats_start_window = "";
         }
-        update_table();
+        stats_update_table();
     });
     $("#stats_window_end").on('change', function (e) {
         if (e.target.value !== "") {
@@ -68,11 +75,11 @@ function stats_handle_window_change() {
         } else {
             stats_end_window = "";
         }
-        update_table();
+        stats_update_table();
     });
 }
 
-function update_table() {
+function stats_update_table() {
     let query = "";
     let previous = false;
 

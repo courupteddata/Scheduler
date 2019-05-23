@@ -17,31 +17,32 @@
     stats_partial.html, Copyright 2019 Nathan Jones (Nathan@jones.one)
 -->
 <div>
-    <div class="row">
-        <div class="col">
-
+    <div class="row pt-1 pb-1">
+        <div class="col-sm-1">
+            <button class="btn btn-primary" id="stats_refresh_employee_select">Refresh</button>
         </div>
-    </div>
-    <div class="row">
-        <div class="col">
+        <div class="col-sm-3">
             <label>
                 Window Start:
                 <input type="date" name="Window Start" id="stats_window_start">
             </label>
         </div>
-        <div class="col">
+        <div class="col-sm-3">
             <label>
                 Window End:
                 <input type="date" name="Window End" id="stats_window_end">
             </label>
         </div>
-        <div class="col">
-            <label>
+        <div class="col-sm-2">
+            <label for="stats_employee_select">
                 Select Employee:
-                <select class="selectpicker dropdown" data-dropup-auto="false" data-live-search="true"
-                        id="stats_employee_select" title="Select Employee">
-                </select>
             </label>
+        </div>
+        <div class="col-sm-2">
+            <select class="selectpicker dropdown" data-dropup-auto="false" data-live-search="true"
+                    id="stats_employee_select" title="Select Employee">
+            </select>
+
         </div>
     </div>
     <div class="row">

@@ -100,6 +100,7 @@ function employee_setup_modal() {
                     modal_requirement_list.push(temp);
                     employee_refresh_requirements_list(modal_requirement_table, modal_requirement_list, modal_requirement_type_select, modal_requirement_view);
                     modal_requirement_view.empty();
+                    modal_requirement_type_select.val('').selectpicker('refresh');
                 },
                 function () {
                     modal_requirement_type_select.val('').selectpicker('refresh');

@@ -64,6 +64,32 @@ class DB:
                         'progress REAL NOT NULL,' \
                         'message TEXT);'
 
+    ENTITY_TEMPLATE_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS entity_template(' \
+                                   'id INTEGER PRIMARY KEY AUTOINCREMENT,' \
+                                   'label TEXT NOT NULL);'
+
+    REQUIREMENT_TEMPLATE_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS requirement_template(' \
+                                        'id INTEGER PRIMARY KEY AUTOINCREMENT,' \
+                                        'entity_template_id INTEGER NOT NULL,' \
+                                        'label TEXT,' \
+                                        'json_data TEXT NOT NULL,' \
+                                        'CONSTRAINT req_temp_check_ent_temp FOREIGN KEY (entity_template_id) ' \
+                                        'REFERENCES entity_template(id) ON DELETE CASCADE);'
+
+    SHIFT_TEMPLATE_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS shift_template(' \
+                                  'id INTEGER PRIMARY KEY AUTOINCREMENT,' \
+                                  'label TEXT);'
+
+    SHIFT_TEMPLATE_DATA_TABLE_CREATE = 'CREATE TABLE IF NOT EXISTS shift_template_data(' \
+                                       'id INTEGER PRIMARY KEY AUTOINCREMENT,' \
+                                       'shift_template_id INTEGER NOT NULL,' \
+                                       'label TEXT,' \
+                                       'start TEXT,' \
+                                       'end TEXT,' \
+                                       'type TEXT,' \
+                                       'CONSTRAINT req_temp_check_ent_temp FOREIGN KEY (shift_template_id) ' \
+                                       'REFERENCES shift_template(id) ON DELETE CASCADE);'
+
     def __init__(self):
         self.db = sqlite3.connect("scheduler.db", check_same_thread=False, timeout=60)
         self.db.execute(DB.ENFORCE_CONSTRAINT)
@@ -82,6 +108,10 @@ class DB:
         temp.db.execute(DB.SHIFT_TABLE_CREATE)
         temp.db.execute(DB.REQUIREMENT_TABLE_CREATE)
         temp.db.execute(DB.WORK_TABLE_CREATE)
+        temp.db.execute(DB.ENTITY_TEMPLATE_TABLE_CREATE)
+        temp.db.execute(DB.REQUIREMENT_TEMPLATE_TABLE_CREATE)
+        temp.db.execute(DB.SHIFT_TEMPLATE_TABLE_CREATE)
+        temp.db.execute(DB.SHIFT_TEMPLATE_DATA_TABLE_CREATE)
         temp.db.commit()
 
         temp.db.close()
